@@ -1,6 +1,6 @@
 # codex-marketplace
 
-A personal Codex plugin marketplace for reusable workflows, skills, and profile instruction files.
+A personal Codex plugin marketplace for reusable skills, workflows, and profile instruction files.
 
 This repository is the Codex counterpart to `TonyMarkham/cc-marketplace`. It uses the Codex-native marketplace path:
 
@@ -34,33 +34,37 @@ Codex installs plugin bundles into its plugin cache, not into the working projec
 
 | Name | Description |
 | --- | --- |
-| `online-entity-codex-plugin` | Codex workflows and commands for iterative plan refinement, architecture review, and plugin-building review. |
+| `online-entity-codex-plugin` | Codex skills for iterative plan optimization, architecture review, and plugin-building review. |
 
-## Commands
+## Skills
 
-### `/optimize-plan`
+### `optimize-plan`
 
-Optimize a plan document through iterative fresh-context Codex review/edit passes until stable.
+Optimize a plan document through iterative Codex review/edit passes until stable.
 
 File loop mode reviews and edits a file in place each pass:
 
 ```text
-/optimize-plan <file>
+Use $optimize-plan on <file>
 ```
 
 Plan mode reads from an input file and writes the complete refined plan to an output file each pass:
 
 ```text
-/optimize-plan <input_file> <output_file>
+Use $optimize-plan on <input_file> and write the result to <output_file>
 ```
 
-Optional GPT/Codex controls:
+Optional GPT/Codex preferences can be included in plain language:
 
 ```text
-/optimize-plan <file> --model gpt-5.5 --reasoning high
+Use $optimize-plan on <file> with gpt-5.5 and high reasoning.
 ```
 
-This is the Codex-native port of the Claude Code `/optimize-plan` command. It uses Codex/GPT model terminology and requires Codex subagent support for the fresh-context pass loop.
+This is the Codex-supported port of the Claude Code `/optimize-plan` workflow. Codex CLI slash commands are currently built-in commands; this marketplace exposes the workflow as a skill instead.
+
+### `plan-refiner`
+
+Review and refine implementation plans by checking evidence, assumptions, sequencing, verification steps, and Codex plugin/runtime constraints.
 
 ## Profile Instructions
 
@@ -118,9 +122,9 @@ codex-marketplace/
         strict-auditor.md
         architect.md
         plugin-builder.md
-      commands/
-        optimize-plan.md
       skills/
+        optimize-plan/
+          SKILL.md
         plan-refiner/
           SKILL.md
           scripts/

@@ -1,34 +1,38 @@
 ---
-description: Optimize a plan document through iterative fresh-context Codex review/edit passes until stable.
-argument-hint: "<file> | <input_file> <output_file> [--model <model>] [--reasoning <effort>]"
+name: optimize-plan
+description: Optimize a plan document through iterative review/edit passes until stable. Use when the user asks to optimize, harden, pressure-test, or repeatedly refine a plan file, especially when they expect the old /optimize-plan workflow from Claude Code.
 ---
 
-# /optimize-plan
+# Optimize Plan
 
-Optimize a plan document through iterative fresh-context review/edit passes until stable.
+Optimize a plan document through iterative review/edit passes until stable.
 
-## Arguments
+This is the Codex-supported version of the Claude Code `/optimize-plan` workflow. Invoke it as a skill:
 
-`$ARGUMENTS` is one of:
+```text
+Use $optimize-plan on <file>
+Use $optimize-plan on <input_file> and write the result to <output_file>
+```
 
-- `<file>`: file loop mode. Review and edit `<file>` in place each pass.
-- `<input_file> <output_file>`: plan mode. Read `<input_file>` and write the complete refined plan to `<output_file>` each pass.
-- `--model <model>`: optional. Preferred model for fresh-context review agents, for example `gpt-5.5`, `gpt-5.4`, or `gpt-5.4-mini`.
-- `--reasoning <effort>`: optional. Preferred reasoning effort for review agents, for example `medium`, `high`, or `xhigh`.
+## Modes
 
-Parse the arguments before doing anything else. Strip `--model <model>` and `--reasoning <effort>` from the file arguments after recording them.
+Parse the user's request before doing anything else.
 
-Default to the current Codex model and reasoning effort when no override is provided. Do not map Anthropic model names such as Sonnet or Opus; this command is for Codex and GPT models.
+- File loop mode: one file path is provided. Review and edit that file in place each pass.
+- Plan mode: input and output paths are provided. Read the input file and write the complete refined plan to the output file each pass.
+- Model/reasoning preferences: if the user asks for a specific GPT model or reasoning effort, use those preferences only where the active Codex runtime supports them.
 
-## Your Role
+Do not map Anthropic model names such as Sonnet or Opus. This workflow runs on Codex with GPT models.
 
-You are the orchestrator. Do not perform the review or edit pass yourself unless subagents are unavailable in the active Codex runtime.
+## Orchestration
 
-Use fresh-context Codex subagents, one per pass, and evaluate their structured reports to decide whether to continue. If subagents are unavailable, stop and explain that this command requires Codex subagent support rather than silently doing a single-context review.
+Prefer fresh-context subagents, one per pass, when the active runtime supports them and the user has authorized subagent use.
+
+If the runtime requires explicit authorization for subagents and the user has not provided it, ask for permission before starting the pass loop. If subagents are unavailable or the user declines, offer a single-agent fallback and label it clearly as lower isolation than the original fresh-context workflow.
 
 ## Pass Log
 
-Maintain a pass log in working memory throughout:
+Maintain a pass log in working memory:
 
 ```text
 Pass 1: ISSUES_FOUND: [...] | CHANGES_MADE: [...]
@@ -37,7 +41,7 @@ Pass 2: ISSUES_FOUND: [...] | CHANGES_MADE: [...]
 
 ## Each Pass
 
-Spawn one fresh-context Codex subagent with the selected model and reasoning effort when those controls are available. Ask it to run exactly one thorough review-and-fix pass with this prompt, substituting the pass number, file paths, mode instructions, and current pass log:
+Run exactly one thorough review-and-fix pass. For subagent mode, give the pass agent this task with the pass number, file paths, mode instructions, and pass log filled in:
 
 ```text
 You are performing pass N of a plan optimization loop. Do one thorough review-and-fix pass on the plan document, then report back with a structured summary.
@@ -77,22 +81,25 @@ REMAINING_CONCERNS:
 (or "none")
 ```
 
-## Convergence Check
+In single-agent fallback mode, apply the same pass instructions yourself. Keep the pass log visible in your reasoning and final summary.
 
-After receiving each pass report, check these conditions in order:
+## Convergence
+
+After each pass report, check these conditions in order:
 
 1. Converged: `ISSUES_FOUND` is `none` for three consecutive passes. Stop.
 2. Flip-flop: any item in this pass's `ISSUES_FOUND` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
 3. Safety limit: pass count has reached 12. Stop.
-4. Otherwise: append to the pass log and spawn the next pass.
+4. Otherwise: append to the pass log and run the next pass.
 
 ## Final Report
 
-When stopping, tell the user:
+When stopping, report:
 
 - Mode used: file loop or plan mode.
+- Execution style: fresh-context subagents or single-agent fallback.
 - Number of passes run.
-- Stop reason: converged, flip-flop detected, or safety limit reached.
+- Stop reason: converged, flip-flop detected, safety limit reached, or user stopped.
 - If flip-flop: quote the oscillating item.
 - Output file path, or `edited in place: <file>`.
-- `REMAINING_CONCERNS` from the final pass, if any.
+- Remaining concerns from the final pass, if any.
