@@ -35,8 +35,8 @@ If the runtime requires explicit authorization for subagents and the user has no
 Maintain a pass log in working memory:
 
 ```text
-Pass 1: ISSUES_FOUND: [...] | CHANGES_MADE: [...]
-Pass 2: ISSUES_FOUND: [...] | CHANGES_MADE: [...]
+Pass 1: MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
+Pass 2: MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
 ```
 
 ## Each Pass
@@ -60,16 +60,21 @@ Previous pass history:
 Review instructions:
 1. Read the plan file thoroughly before forming a conclusion.
 2. Audit every concrete claim against the actual codebase. Use file reads, rg/search, shell commands, and web browsing when needed to verify file paths, function signatures, type names, package APIs, dependency versions, and external SDK behavior referenced in the plan.
-3. Identify genuine issues only. Do not invent problems or create make-work. Only flag something if it would cause failure, incorrect behavior, unclear implementation, or materially weaker verification.
-4. Pay particular attention to dependency ordering. Verify that every step only relies on outputs from earlier steps. Flag any case where a step depends on something produced later.
-5. Before flagging an issue, check the pass history. Do not re-raise anything already listed in a previous pass's CHANGES_MADE unless the change introduced a new concrete problem.
-6. Fix every issue you identified according to the mode instructions above.
-7. Return only the structured report below.
+3. Identify genuine material issues only. A material issue is one that would affect implementation correctness, production behavior, verification quality, maintainability of the planned change, or executable dependency order.
+4. Do not invent problems, create make-work, or turn polish into issues. Do not report wording polish, stylistic preferences, optional enhancements, alternative designs, or tiny clarifications as material issues.
+5. Pay particular attention to dependency ordering. Verify that every step only relies on outputs from earlier steps. Flag any case where a step depends on something produced later.
+6. Before flagging an issue, check the pass history. Do not re-raise anything already listed in a previous pass's CHANGES_MADE unless the change introduced a new concrete material problem.
+7. Fix blocking and material issues according to the mode instructions above. Apply minor wording or formatting edits only when they are adjacent to material fixes; do not edit just to polish.
+8. Return only the structured report below.
 
-ISSUES_FOUND:
-- <issue 1>
-- <issue 2>
-(or "none" if the plan is clean)
+MATERIAL_ISSUES:
+- BLOCKING: <issue that would prevent implementation or cause incorrect production behavior>
+- MATERIAL: <issue that materially weakens correctness, verification, maintainability, or execution order>
+(or "none")
+
+MINOR_NOTES:
+- <minor wording, formatting, or optional clarity note that does not affect implementation>
+(or "none")
 
 CHANGES_MADE:
 - <change 1>
@@ -87,10 +92,13 @@ In single-agent fallback mode, apply the same pass instructions yourself. Keep t
 
 After each pass report, check these conditions in order:
 
-1. Converged: `ISSUES_FOUND` is `none` for three consecutive passes. Stop.
-2. Flip-flop: any item in this pass's `ISSUES_FOUND` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
-3. Safety limit: pass count has reached 12. Stop.
-4. Otherwise: append to the pass log and run the next pass.
+1. Converged: `MATERIAL_ISSUES` is `none` for three consecutive passes. Stop.
+2. Minor-only pass: if `MATERIAL_ISSUES` is `none`, count the pass as clean even when `MINOR_NOTES` is non-empty or minor edits were made.
+3. Flip-flop: any item in this pass's `MATERIAL_ISSUES` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
+4. Safety limit: pass count has reached 12. Stop.
+5. Otherwise: append to the pass log and run the next pass.
+
+Only `BLOCKING` or `MATERIAL` findings reset convergence. `MINOR_NOTES`, wording polish, optional enhancements, and alternative designs do not reset convergence.
 
 ## Final Report
 
