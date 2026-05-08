@@ -21,8 +21,16 @@ Parse the user's request before doing anything else.
 - File loop mode: one file path is provided. Review and edit that file in place each pass.
 - Plan mode: input and output paths are provided. Read the input file and write the complete refined plan to the output file each pass.
 - Model/reasoning preferences: if the user asks for a specific GPT model or reasoning effort, use those preferences only where the active Codex runtime supports them.
+- Distinguish orchestrator and reviewer preferences when the user provides them. The orchestrator controls the loop; reviewer subagents perform pass audits.
 
 Do not map Anthropic model names such as Sonnet or Opus. This workflow runs on Codex with GPT models.
+
+Recommended efficient defaults when the user does not specify models:
+
+- Orchestrator: current session model and reasoning effort.
+- Reviewer subagents: `gpt-5.4-mini` with `high` reasoning when the runtime supports model selection for subagents.
+- High-risk escalation: use `gpt-5.5` with `high` reasoning for the first pass or final adjudication only when the user asks for a higher-confidence review.
+- Avoid `gpt-5.4-nano` for this workflow unless the user explicitly asks for the cheapest smoke review.
 
 ## Orchestration
 
@@ -52,6 +60,9 @@ Run exactly one thorough review-and-fix pass. For subagent mode, give the pass a
 
 ```text
 You are performing pass N of a plan optimization loop. Do one thorough review-and-fix pass on the plan document, then report back with a structured summary.
+
+Model preference:
+Use the reviewer model and reasoning effort selected by the orchestrator for this pass. If no reviewer model was selected, prefer gpt-5.4-mini with high reasoning when available. If the runtime cannot set a subagent model or reasoning effort, continue with the runtime default and state that in the pass summary.
 
 Role contract:
 Act as a fresh-context production plan reviewer. If a plan-review-subagent base instruction is available in this runtime, follow it. Otherwise, follow the review threshold and structured output rules in this prompt.

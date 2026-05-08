@@ -116,6 +116,24 @@ Optional GPT/Codex preferences can be included in plain language:
 Use $optimize-plan on <file> with subagents authorized, gpt-5.5, and high reasoning.
 ```
 
+Recommended efficient model split:
+
+```text
+Use $optimize-plan on <file> with subagents authorized. Use the current model as orchestrator and use gpt-5.4-mini high for reviewer subagents.
+```
+
+High-risk review with a stronger first pass:
+
+```text
+Use $optimize-plan on <file> with subagents authorized. Use gpt-5.5 medium as orchestrator, gpt-5.5 high for pass 1, and gpt-5.4-mini high for later reviewer subagents.
+```
+
+Cheaper smoke review:
+
+```text
+Use $optimize-plan on <file> with subagents authorized. Use gpt-5.4-mini medium for orchestrator and reviewer subagents.
+```
+
 This is the Codex-supported port of the Claude Code `/optimize-plan` workflow. Codex CLI slash commands are currently built-in commands; this marketplace exposes the workflow as a skill instead.
 
 The fresh-context loop requires explicit subagent authorization in current Codex runtimes. If the prompt does not authorize subagents, the skill may run in single-agent fallback mode and should label that fallback in its final report.
