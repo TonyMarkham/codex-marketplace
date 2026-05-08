@@ -137,6 +137,14 @@ Codex does not automatically use those files just because the plugin is installe
 Example user-level config in `~/.codex/config.toml`, after replacing `<version>` with the installed plugin version:
 
 ```toml
+[profiles.optimize-plan-orchestrator]
+model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/optimize-plan-orchestrator.md"
+model_reasoning_effort = "high"
+
+[profiles.plan-review-subagent]
+model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/plan-review-subagent.md"
+model_reasoning_effort = "high"
+
 [profiles.strict-auditor]
 model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/strict-auditor.md"
 model_reasoning_effort = "high"
@@ -155,8 +163,10 @@ The `profiles/` directory in this repo contains editable examples for a local ch
 Run a profile with:
 
 ```bash
-codex --profile strict-auditor
+codex --profile optimize-plan-orchestrator
 ```
+
+The `optimize-plan` skill still includes its review contract inline because current Codex runtimes may not support assigning a separate profile or `model_instructions_file` to each spawned subagent.
 
 ## Hooks
 
@@ -186,6 +196,8 @@ codex-marketplace/
         strict-auditor.md
         architect.md
         plugin-builder.md
+        optimize-plan-orchestrator.md
+        plan-review-subagent.md
       skills/
         optimize-plan/
           SKILL.md
@@ -201,4 +213,6 @@ codex-marketplace/
     strict-auditor.toml
     architect.toml
     plugin-builder.toml
+    optimize-plan-orchestrator.toml
+    plan-review-subagent.toml
 ```

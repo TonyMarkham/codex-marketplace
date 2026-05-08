@@ -26,6 +26,13 @@ Do not map Anthropic model names such as Sonnet or Opus. This workflow runs on C
 
 ## Orchestration
 
+Preferred role contracts:
+
+- Orchestrator: `base-instructions/optimize-plan-orchestrator.md`
+- Review subagent: `base-instructions/plan-review-subagent.md`
+
+Use those base instructions when the active Codex runtime/profile setup supports applying them. If it does not, continue with this skill's inline instructions; do not stop just because role-specific base instructions are not automatically applied.
+
 Prefer fresh-context subagents, one per pass, when the active runtime supports them and the user has authorized subagent use.
 
 If the runtime requires explicit authorization for subagents and the user has not provided it, ask for permission before starting the pass loop. If subagents are unavailable or the user declines, offer a single-agent fallback and label it clearly as lower isolation than the original fresh-context workflow.
@@ -45,6 +52,9 @@ Run exactly one thorough review-and-fix pass. For subagent mode, give the pass a
 
 ```text
 You are performing pass N of a plan optimization loop. Do one thorough review-and-fix pass on the plan document, then report back with a structured summary.
+
+Role contract:
+Act as a fresh-context production plan reviewer. If a plan-review-subagent base instruction is available in this runtime, follow it. Otherwise, follow the review threshold and structured output rules in this prompt.
 
 Mode: FILE_LOOP or PLAN_MODE
 
