@@ -34,7 +34,33 @@ Codex installs plugin bundles into its plugin cache, not into the working projec
 
 | Name | Description |
 | --- | --- |
-| `online-entity-codex-plugin` | Codex workflows for iterative plan refinement, architecture review, and plugin-building review. |
+| `online-entity-codex-plugin` | Codex workflows and commands for iterative plan refinement, architecture review, and plugin-building review. |
+
+## Commands
+
+### `/optimize-plan`
+
+Optimize a plan document through iterative fresh-context Codex review/edit passes until stable.
+
+File loop mode reviews and edits a file in place each pass:
+
+```text
+/optimize-plan <file>
+```
+
+Plan mode reads from an input file and writes the complete refined plan to an output file each pass:
+
+```text
+/optimize-plan <input_file> <output_file>
+```
+
+Optional GPT/Codex controls:
+
+```text
+/optimize-plan <file> --model gpt-5.5 --reasoning high
+```
+
+This is the Codex-native port of the Claude Code `/optimize-plan` command. It uses Codex/GPT model terminology and requires Codex subagent support for the fresh-context pass loop.
 
 ## Profile Instructions
 
@@ -92,6 +118,8 @@ codex-marketplace/
         strict-auditor.md
         architect.md
         plugin-builder.md
+      commands/
+        optimize-plan.md
       skills/
         plan-refiner/
           SKILL.md

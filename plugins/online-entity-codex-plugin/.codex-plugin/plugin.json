@@ -1,7 +1,7 @@
 {
   "name": "online-entity-codex-plugin",
-  "version": "0.1.0",
-  "description": "Reusable Codex workflows for iterative plan refinement, architecture review, and plugin-building review.",
+  "version": "0.2.0",
+  "description": "Reusable Codex workflows and commands for iterative plan refinement, architecture review, and plugin-building review.",
   "author": {
     "name": "Tony Markham",
     "url": "https://github.com/TonyMarkham"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Online Entity Codex",
-    "shortDescription": "Plan refinement and plugin-building workflows.",
-    "longDescription": "Reusable Codex workflows for reviewing plans, tightening architecture decisions, and building Codex plugin marketplace packages.",
+    "shortDescription": "Plan refinement commands and plugin-building workflows.",
+    "longDescription": "Reusable Codex workflows and commands for reviewing plans, tightening architecture decisions, and building Codex plugin marketplace packages.",
     "developerName": "Tony Markham",
     "category": "Productivity",
     "capabilities": [
@@ -29,7 +29,7 @@
     ],
     "websiteURL": "https://github.com/TonyMarkham/codex-marketplace",
     "defaultPrompt": [
-      "Use plan-refiner to review this implementation plan.",
+      "Run /optimize-plan on this implementation plan.",
       "Tighten this plugin marketplace design.",
       "Audit this plan for gaps and assumptions."
     ],
