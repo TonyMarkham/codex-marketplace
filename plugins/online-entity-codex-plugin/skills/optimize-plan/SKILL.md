@@ -93,6 +93,13 @@ MATERIAL_ISSUES:
 - MATERIAL: <issue that materially weakens correctness, verification, maintainability, or execution order>
 (or "none")
 
+BLOCKS_IMPLEMENTATION:
+yes | no
+
+CONTINUE_REASON:
+- <specific unfixed risk that justifies another pass>
+(or "none")
+
 MINOR_NOTES:
 - <minor wording, formatting, or optional clarity note that does not affect implementation>
 (or "none")
@@ -113,13 +120,24 @@ In single-agent fallback mode, apply the same pass instructions yourself. Keep t
 
 After each pass report, check these conditions in order:
 
-1. Converged: `MATERIAL_ISSUES` is `none` for three consecutive passes. Stop.
-2. Minor-only pass: if `MATERIAL_ISSUES` is `none`, count the pass as clean even when `MINOR_NOTES` is non-empty or minor edits were made.
-3. Flip-flop: any item in this pass's `MATERIAL_ISSUES` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
-4. Safety limit: pass count has reached 12. Stop.
-5. Otherwise: append to the pass log and run the next pass.
+1. Converged: clean-pass target reached. Stop.
+2. Flip-flop: any item in this pass's `MATERIAL_ISSUES` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
+3. Safety limit: pass count has reached 8. Stop.
+4. Otherwise: append to the pass log and apply the continuation gate below.
 
-Only `BLOCKING` or `MATERIAL` findings reset convergence. `MINOR_NOTES`, wording polish, optional enhancements, and alternative designs do not reset convergence.
+Continuation gate:
+
+- Passes 1-4: continue only when `MATERIAL_ISSUES` is not `none` and `CONTINUE_REASON` names a concrete unfixed risk.
+- Passes 5-8: continue only when `BLOCKS_IMPLEMENTATION` is `yes`.
+- Stop when `BLOCKS_IMPLEMENTATION` is `no` after pass 4, even if the pass made edits.
+- Stop when changes are hardening, documentation, ordering, corruption validation, output formatting, test expansion, or clarity improvements unless the reviewer explains a concrete compile failure, test failure, data loss/corruption, incorrect runtime behavior, security exposure, or dependency-order blocker those edits prevented.
+
+Clean-pass target:
+
+- Before pass 5: three consecutive passes with `MATERIAL_ISSUES: none`.
+- From pass 5 onward: one pass with `BLOCKS_IMPLEMENTATION: no`.
+
+Only concrete implementation-blocking risks justify late-loop continuation. `MINOR_NOTES`, wording polish, optional enhancements, alternative designs, and non-blocking hardening do not reset convergence.
 
 ## Final Report
 
