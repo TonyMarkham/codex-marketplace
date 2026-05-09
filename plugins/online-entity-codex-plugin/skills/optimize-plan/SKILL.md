@@ -58,13 +58,22 @@ Maintain a per-run permission registry:
 
 ```text
 APPROVED_PERMISSION_PATTERNS:
-- <command prefix or exact pattern approved by the user>
+- <runtime family>: <command prefix or exact pattern approved by the user>
 
 PERMISSION_EVENTS:
-- Pass N requested: <command or action> | user response: approved/denied | reusable pattern: <pattern or none>
+- Pass N requested: <command or action> | runtime: <windows-powershell | posix-shell | other> | user response: approved/denied | reusable pattern: <pattern or none>
 ```
 
 The registry is advisory context for later reviewers. It does not bypass Codex runtime approvals. If the runtime still asks for approval, comply with the runtime prompt and continue the same pass after approval.
+
+Keep permission patterns ambidextrous:
+
+- Detect the active runtime family from paths and shell behavior: Windows PowerShell, POSIX shell, or other.
+- Use native read-only commands for that runtime instead of forcing Windows commands on Linux/macOS or POSIX commands on Windows.
+- Keep equivalent command shapes stable within a run so saved approval prefix rules can match later passes.
+- Track approved patterns by runtime family. Windows and WSL/Linux usually have separate Codex homes and separate rules files.
+- Prefer built-in file/search tools when available. If shell commands are needed, prefer stable read-only forms.
+- Never request broad arbitrary-shell approval and never preapprove destructive commands.
 
 ## Each Pass
 
@@ -93,6 +102,9 @@ Previous pass history:
 Preapproved permission patterns for this run:
 <paste APPROVED_PERMISSION_PATTERNS, or "none">
 
+Command stability:
+Use the active runtime's native read-only command family consistently. On Windows PowerShell, prefer stable forms such as `Get-Content -Raw`, `Select-String -Path ... -Pattern ... -Context ...`, and `Get-ChildItem ...`. On Linux/macOS POSIX shells, prefer stable forms such as `sed -n ...`, `rg -n ...`, and `find ... -maxdepth ... -type f -print`. Do not mix equivalent command shapes without a material reason.
+
 Review instructions:
 1. Read the plan file thoroughly before forming a conclusion.
 2. Audit every concrete claim against the actual codebase. Use file reads, rg/search, shell commands, and web browsing when needed to verify file paths, function signatures, type names, package APIs, dependency versions, and external SDK behavior referenced in the plan.
@@ -103,8 +115,9 @@ Review instructions:
 7. Fix blocking and material issues according to the mode instructions above. Apply minor wording or formatting edits only when they are adjacent to material fixes; do not edit just to polish.
 8. You are authorized to read and edit the target plan file for this pass. Do not ask semantic permission to inspect or edit that target file; only runtime approval prompts may require user interaction.
 9. Prefer built-in file/search tools for target-file inspection. Use shell commands for repo verification when they materially help.
-10. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
-11. Return only the structured report below.
+10. When using shell commands, use native stable read-only command shapes for the active runtime family. Keep equivalent command forms consistent with the preapproved patterns where possible.
+11. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include the runtime family and a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
+12. Return only the structured report below.
 
 MATERIAL_ISSUES:
 - BLOCKING: <issue that would prevent implementation or cause incorrect production behavior>
@@ -129,6 +142,7 @@ CHANGES_MADE:
 
 PERMISSIONS_REQUESTED:
 - command/action: <command or action>
+  runtime: windows-powershell | posix-shell | other
   reason: <why it was needed>
   user_response: approved | denied | not requested
   reusable_pattern: <exact command or safe prefix pattern, or "none">

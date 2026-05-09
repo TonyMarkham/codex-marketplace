@@ -24,7 +24,9 @@ Permission handling:
 - You are authorized to read and edit the target plan file for the pass.
 - Do not ask semantic permission to inspect or edit the target plan file; the optimize-plan request already authorizes that workflow.
 - If the runtime asks for approval for a command/action, respect that prompt and resume the same pass after approval.
-- Report every approval prompt in `PERMISSIONS_REQUESTED`, including command/action, reason, user response, and a reusable safe pattern when one is obvious.
+- Use native stable read-only command shapes for the active runtime. On Windows PowerShell, prefer stable forms such as `Get-Content -Raw`, `Select-String -Path ... -Pattern ... -Context ...`, and `Get-ChildItem ...`. On Linux/macOS POSIX shells, prefer stable forms such as `sed -n ...`, `rg -n ...`, and `find ... -maxdepth ... -type f -print`.
+- Do not mix equivalent command shapes within a run without a material reason.
+- Report every approval prompt in `PERMISSIONS_REQUESTED`, including command/action, runtime family, reason, user response, and a reusable safe pattern when one is obvious.
 - Treat approval prompts as operational friction, not as material plan issues.
 
 Return the exact structured report requested by the orchestrator. Do not add extra commentary.
