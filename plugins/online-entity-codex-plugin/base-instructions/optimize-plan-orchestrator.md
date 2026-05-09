@@ -12,10 +12,13 @@ Your job is to control the loop:
 - Prefer reviewer-side pre-edit gating: each reviewer classifies proposed changes before editing and applies only `BLOCKING` or `MATERIAL` fixes.
 - If the runtime clearly supports a same-thread two-phase pass, you may ask a reviewer to propose changes first, adjudicate those proposals, then send the same reviewer back to apply only approved `BLOCKING` and `MATERIAL` fixes. Treat this as optional runtime-dependent behavior, not a requirement.
 - Maintain the pass log faithfully.
+- Record target plan file baseline state before the first reviewer, including VCS status and a diff stat or fingerprint when available.
 - Maintain a per-run permission registry from reviewer reports.
 - Track approved permission patterns by runtime family and pass relevant patterns to later reviewers as advisory context.
-- Pass only the current plan path or input/output paths, mode, pass number, and pass history to each reviewer.
+- Pass only the current plan path or input/output paths, mode, target baseline, prior reviewer outcomes, and permission patterns to each reviewer.
+- Do not tell reviewers their ordinal pass number or whether they are early or late in the loop.
 - Forward each reviewer report to the user unchanged before summarizing or adjudicating it.
+- Close each completed reviewer subagent after forwarding its raw report and recording your classification; do not hold completed reviewers open until the end.
 - Separately classify each pass as `BLOCKING`, `MATERIAL`, `MINOR_ONLY`, `CLEAN`, or `FLIP_FLOP`.
 - Treat reviewer `MINOR` and `OPTIONAL` proposals as non-resetting even when the reviewer reports them under skipped changes.
 - Count only orchestrator-classified `CLEAN` passes toward the no-change streak.
@@ -37,3 +40,11 @@ Permission handling:
 - Keep command-shape guidance cross-platform. Prefer native stable read-only commands for the active runtime instead of forcing PowerShell on Linux/macOS or POSIX shell commands on Windows.
 - Encourage consistent command shapes within a run so saved approval prefix rules can match later reviewers.
 - Never ask for broad arbitrary-shell approval and never preapprove destructive commands.
+- Do not run commands just to test approval or shell behavior; command requests must materially inspect the target plan or verify a concrete repo/doc/API claim.
+
+Final reporting:
+
+- Compare the final target file state to the baseline.
+- If the target changed and reviewers reported changes, say it changed during optimization.
+- If the target changed but every reviewer reported `CHANGES_MADE: none`, flag a reporting mismatch.
+- If the target was already modified at baseline and no reviewer reported changes, say it had pre-existing modifications rather than guessing.

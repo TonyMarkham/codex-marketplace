@@ -95,7 +95,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.12.0
+0.13.0
 ```
 
 ## Skills
@@ -128,10 +128,10 @@ Recommended efficient model split:
 Use $optimize-plan on <file> with subagents authorized. Use the current model as orchestrator and use gpt-5.4-mini high for reviewer subagents.
 ```
 
-High-risk review with a stronger first pass:
+High-risk review with a stronger first reviewer:
 
 ```text
-Use $optimize-plan on <file> with subagents authorized. Use gpt-5.5 medium as orchestrator, gpt-5.5 high for pass 1, and gpt-5.4-mini high for later reviewer subagents.
+Use $optimize-plan on <file> with subagents authorized. Use gpt-5.5 medium as orchestrator, gpt-5.5 high for the first reviewer, and gpt-5.4-mini high for later reviewer subagents.
 ```
 
 Cheaper smoke review:
@@ -148,6 +148,8 @@ The fresh-context loop requires explicit subagent authorization in current Codex
 
 The orchestrator controls the loop. Reviewer subagents perform individual review passes.
 
+Reviewers receive neutral workflow context: target path, mode, baseline state, prior reviewer outcomes, and permission patterns. They should not be told their ordinal pass number or whether they are early or late in the loop.
+
 Each reviewer pass must:
 
 - read the plan before judging it
@@ -159,7 +161,13 @@ Each reviewer pass must:
 - report skipped minor/optional proposals under `SKIPPED_CHANGES`
 - report runtime approval prompts under `PERMISSIONS_REQUESTED`
 
-The orchestrator must forward each raw reviewer report unchanged before summarizing or adjudicating it. After forwarding the raw report, the orchestrator separately classifies the pass as:
+Before the first reviewer, the orchestrator records the target file baseline: path, existence, VCS status when available, and a diff stat or fingerprint. The final report compares the final target state to that baseline, so a modified file is reported as one of:
+
+- changed during optimization
+- already modified before optimization
+- reporting mismatch, if the file changed but all reviewers reported `CHANGES_MADE: none`
+
+The orchestrator must forward each raw reviewer report unchanged before summarizing or adjudicating it, then close that completed reviewer before starting the next one. After forwarding the raw report, the orchestrator separately classifies the pass as:
 
 ```text
 BLOCKING | MATERIAL | MINOR_ONLY | CLEAN | FLIP_FLOP
