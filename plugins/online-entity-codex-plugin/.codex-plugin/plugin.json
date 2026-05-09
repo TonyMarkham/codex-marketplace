@@ -1,6 +1,6 @@
 {
   "name": "online-entity-codex-plugin",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Reusable Codex skills for iterative plan optimization, architecture review, and plugin-building review.",
   "author": {
     "name": "Tony Markham",

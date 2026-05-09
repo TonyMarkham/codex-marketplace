@@ -54,6 +54,18 @@ Pass 1: MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
 Pass 2: MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
 ```
 
+Maintain a per-run permission registry:
+
+```text
+APPROVED_PERMISSION_PATTERNS:
+- <command prefix or exact pattern approved by the user>
+
+PERMISSION_EVENTS:
+- Pass N requested: <command or action> | user response: approved/denied | reusable pattern: <pattern or none>
+```
+
+The registry is advisory context for later reviewers. It does not bypass Codex runtime approvals. If the runtime still asks for approval, comply with the runtime prompt and continue the same pass after approval.
+
 ## Each Pass
 
 Run exactly one thorough review-and-fix pass. For subagent mode, give the pass agent this task with the pass number, file paths, mode instructions, and pass log filled in:
@@ -78,6 +90,9 @@ Read <input_file>. Think holistically before making edits. When you have a compl
 Previous pass history:
 <paste the full pass log here, or "This is pass 1. No prior history." if first pass>
 
+Preapproved permission patterns for this run:
+<paste APPROVED_PERMISSION_PATTERNS, or "none">
+
 Review instructions:
 1. Read the plan file thoroughly before forming a conclusion.
 2. Audit every concrete claim against the actual codebase. Use file reads, rg/search, shell commands, and web browsing when needed to verify file paths, function signatures, type names, package APIs, dependency versions, and external SDK behavior referenced in the plan.
@@ -86,7 +101,10 @@ Review instructions:
 5. Pay particular attention to dependency ordering. Verify that every step only relies on outputs from earlier steps. Flag any case where a step depends on something produced later.
 6. Before flagging an issue, check the pass history. Do not re-raise anything already listed in a previous pass's CHANGES_MADE unless the change introduced a new concrete material problem.
 7. Fix blocking and material issues according to the mode instructions above. Apply minor wording or formatting edits only when they are adjacent to material fixes; do not edit just to polish.
-8. Return only the structured report below.
+8. You are authorized to read and edit the target plan file for this pass. Do not ask semantic permission to inspect or edit that target file; only runtime approval prompts may require user interaction.
+9. Prefer built-in file/search tools for target-file inspection. Use shell commands for repo verification when they materially help.
+10. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
+11. Return only the structured report below.
 
 MATERIAL_ISSUES:
 - BLOCKING: <issue that would prevent implementation or cause incorrect production behavior>
@@ -109,6 +127,13 @@ CHANGES_MADE:
 - <change 2>
 (or "none")
 
+PERMISSIONS_REQUESTED:
+- command/action: <command or action>
+  reason: <why it was needed>
+  user_response: approved | denied | not requested
+  reusable_pattern: <exact command or safe prefix pattern, or "none">
+(or "none")
+
 REMAINING_CONCERNS:
 - <anything you could not verify or were uncertain about>
 (or "none")
@@ -123,7 +148,8 @@ After each pass report, check these conditions in order:
 1. Converged: clean-pass target reached. Stop.
 2. Flip-flop: any item in this pass's `MATERIAL_ISSUES` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
 3. Safety limit: pass count has reached 8. Stop.
-4. Otherwise: append to the pass log and apply the continuation gate below.
+4. Permission registry: add approved `PERMISSIONS_REQUESTED` entries to `APPROVED_PERMISSION_PATTERNS` when they include a reusable pattern. Pass the updated registry to the next reviewer.
+5. Otherwise: append to the pass log and apply the continuation gate below.
 
 Continuation gate:
 
