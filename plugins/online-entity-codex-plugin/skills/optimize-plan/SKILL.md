@@ -50,8 +50,8 @@ If the runtime requires explicit authorization for subagents and the user has no
 Maintain a pass log in working memory:
 
 ```text
-Pass 1: MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
-Pass 2: MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
+Pass 1: ORCHESTRATOR_CLASSIFICATION: [...] | MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
+Pass 2: ORCHESTRATOR_CLASSIFICATION: [...] | MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
 ```
 
 Maintain a per-run permission registry:
@@ -155,12 +155,44 @@ REMAINING_CONCERNS:
 
 In single-agent fallback mode, apply the same pass instructions yourself. Keep the pass log visible in your reasoning and final summary.
 
+## Orchestrator Adjudication
+
+After each subagent returns, first forward the raw subagent report to the user unchanged. Put it under a short label such as `Raw pass N report`.
+
+Then make a separate orchestrator classification:
+
+```text
+ORCHESTRATOR_CLASSIFICATION:
+BLOCKING | MATERIAL | MINOR_ONLY | CLEAN | FLIP_FLOP
+
+ORCHESTRATOR_REASON:
+<one sentence grounded in the raw report and pass history>
+
+CLEAN_OR_MINOR_STREAK:
+<current count>/3
+
+DECISION:
+continue | stop
+```
+
+The orchestrator owns this classification. Do not continue because edits were made. Do not let a reviewer reset convergence merely by making edits.
+
+Classification rules:
+
+- `BLOCKING`: the plan would likely fail implementation, compile/test verification, runtime behavior, data safety, security, or dependency ordering.
+- `MATERIAL`: the plan would materially weaken correctness, verification quality, maintainability of the planned change, or executable dependency order.
+- `MINOR_ONLY`: the pass made only wording, formatting, optional hardening, documentation, ordering, output-format polish, non-blocking test expansion, or clarity edits.
+- `CLEAN`: no material issue and no meaningful edit.
+- `FLIP_FLOP`: this pass reopens or reverses a previous pass's change without a new concrete material reason.
+
+Three consecutive `MINOR_ONLY` or `CLEAN` classifications stop the loop.
+
 ## Convergence
 
-After each pass report, check these conditions in order:
+After forwarding the raw report and making the orchestrator classification, check these conditions in order:
 
 1. Converged: clean-pass target reached. Stop.
-2. Flip-flop: any item in this pass's `MATERIAL_ISSUES` closely matches an item in any previous pass's `CHANGES_MADE`. Stop.
+2. Flip-flop: orchestrator classification is `FLIP_FLOP`. Stop.
 3. Safety limit: pass count has reached 8. Stop.
 4. Permission registry: add approved `PERMISSIONS_REQUESTED` entries to `APPROVED_PERMISSION_PATTERNS` when they include a reusable pattern. Pass the updated registry to the next reviewer.
 5. Otherwise: append to the pass log and apply the continuation gate below.
@@ -168,14 +200,14 @@ After each pass report, check these conditions in order:
 Continuation gate:
 
 - Passes 1-4: continue only when `MATERIAL_ISSUES` is not `none` and `CONTINUE_REASON` names a concrete unfixed risk.
-- Passes 5-8: continue only when `BLOCKS_IMPLEMENTATION` is `yes`.
-- Stop when `BLOCKS_IMPLEMENTATION` is `no` after pass 4, even if the pass made edits.
+- Passes 5-8: continue only when orchestrator classification is `BLOCKING`.
+- Stop when orchestrator classification is `MINOR_ONLY` or `CLEAN` after pass 4, even if the pass made edits.
 - Stop when changes are hardening, documentation, ordering, corruption validation, output formatting, test expansion, or clarity improvements unless the reviewer explains a concrete compile failure, test failure, data loss/corruption, incorrect runtime behavior, security exposure, or dependency-order blocker those edits prevented.
 
 Clean-pass target:
 
-- Before pass 5: three consecutive passes with `MATERIAL_ISSUES: none`.
-- From pass 5 onward: one pass with `BLOCKS_IMPLEMENTATION: no`.
+- Before pass 5: three consecutive `MINOR_ONLY` or `CLEAN` orchestrator classifications.
+- From pass 5 onward: one `MINOR_ONLY` or `CLEAN` orchestrator classification.
 
 Only concrete implementation-blocking risks justify late-loop continuation. `MINOR_NOTES`, wording polish, optional enhancements, alternative designs, and non-blocking hardening do not reset convergence.
 
