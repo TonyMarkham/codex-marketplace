@@ -92,19 +92,25 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 | --- | --- |
 | `online-entity-codex-plugin` | Codex skills for iterative plan optimization, architecture review, and plugin-building review. |
 
+Current plugin version:
+
+```text
+0.11.0
+```
+
 ## Skills
 
 ### `optimize-plan`
 
 Optimize a plan document through iterative Codex review/edit passes until stable.
 
-File loop mode reviews and edits a file in place each pass:
+File loop mode reviews a file and applies only gated material fixes in place:
 
 ```text
 Use $optimize-plan on <file> with subagents authorized.
 ```
 
-Plan mode reads from an input file and writes the complete refined plan to an output file each pass:
+Plan mode reads from an input file and writes a complete refined plan to an output file:
 
 ```text
 Use $optimize-plan on <input_file> and write the result to <output_file> with subagents authorized.
@@ -138,7 +144,40 @@ This is the Codex-supported port of the Claude Code `/optimize-plan` workflow. C
 
 The fresh-context loop requires explicit subagent authorization in current Codex runtimes. If the prompt does not authorize subagents, the skill may run in single-agent fallback mode and should label that fallback in its final report.
 
-The reviewer prompt uses a pre-edit gate to reduce weak edits: each reviewer must classify proposed changes before editing, apply only blocking/material fixes, and report skipped minor or optional proposals. If a runtime clearly supports a same-thread two-phase reviewer pass, the orchestrator may ask for proposed changes first and send the same reviewer back to apply approved material fixes; otherwise the reviewer-side gate is the supported default.
+#### Optimize-plan behavior
+
+The orchestrator controls the loop. Reviewer subagents perform individual review passes.
+
+Each reviewer pass must:
+
+- read the plan before judging it
+- verify concrete claims against the repository, docs, APIs, and runtime behavior when needed
+- classify proposed edits before editing as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`
+- apply only `BLOCKING` and `MATERIAL` changes
+- apply `MINOR` changes only when directly adjacent to an applied material fix
+- skip `OPTIONAL` changes
+- report skipped minor/optional proposals under `SKIPPED_CHANGES`
+- report runtime approval prompts under `PERMISSIONS_REQUESTED`
+
+The orchestrator must forward each raw reviewer report unchanged before summarizing or adjudicating it. After forwarding the raw report, the orchestrator separately classifies the pass as:
+
+```text
+BLOCKING | MATERIAL | MINOR_ONLY | CLEAN | FLIP_FLOP
+```
+
+Only orchestrator-classified `BLOCKING` and `MATERIAL` passes reset convergence. `MINOR_ONLY` and `CLEAN` count toward convergence even if the reviewer made minor adjacent edits or reported skipped suggestions.
+
+Convergence rules:
+
+- Before pass 5, stop after three consecutive `MINOR_ONLY` or `CLEAN` orchestrator classifications.
+- From pass 5 onward, stop after one `MINOR_ONLY` or `CLEAN` classification.
+- Stop immediately on `FLIP_FLOP`.
+- Stop at the safety limit of 8 passes.
+- Passes 5-8 continue only for orchestrator-classified `BLOCKING` issues.
+
+Permission handling is advisory, not a bypass. If a reviewer reports an approved reusable command pattern, the orchestrator passes that pattern to later reviewers so they can keep command shapes stable, but Codex may still ask for runtime approval.
+
+If a runtime clearly supports a same-thread two-phase reviewer pass, the orchestrator may ask for proposed changes first, adjudicate those proposals, then send the same reviewer back to apply approved material fixes. Otherwise, the reviewer-side pre-edit gate is the supported default.
 
 ### `plan-refiner`
 
