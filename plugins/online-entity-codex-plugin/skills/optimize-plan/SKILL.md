@@ -192,7 +192,7 @@ BLOCKING | MATERIAL | MINOR_ONLY | CLEAN | FLIP_FLOP
 ORCHESTRATOR_REASON:
 <one sentence grounded in the raw report and pass history>
 
-CLEAN_OR_MINOR_STREAK:
+CLEAN_STREAK:
 <current count>/3
 
 DECISION:
@@ -206,34 +206,33 @@ Classification rules:
 - `BLOCKING`: the plan would likely fail implementation, compile/test verification, runtime behavior, data safety, security, or dependency ordering.
 - `MATERIAL`: the plan would materially weaken correctness, verification quality, maintainability of the planned change, or executable dependency order.
 - `MINOR_ONLY`: the pass made only wording, formatting, optional hardening, documentation, ordering, output-format polish, non-blocking test expansion, or clarity edits.
-- `CLEAN`: no material issue and no meaningful edit.
+- `CLEAN`: no material issue and `CHANGES_MADE` is `none`. `MINOR_NOTES` and `SKIPPED_CHANGES` may be non-empty, but the plan file was not changed.
 - `FLIP_FLOP`: this pass reopens or reverses a previous pass's change without a new concrete material reason.
 
-Three consecutive `MINOR_ONLY` or `CLEAN` classifications stop the loop.
+Three consecutive `CLEAN` classifications stop the loop. `MINOR_ONLY` classifications do not count toward the no-change streak.
 
 ## Convergence
 
 After forwarding the raw report and making the orchestrator classification, check these conditions in order:
 
-1. Converged: clean-pass target reached. Stop.
-2. Flip-flop: orchestrator classification is `FLIP_FLOP`. Stop.
-3. Safety limit: pass count has reached 8. Stop.
-4. Permission registry: add approved `PERMISSIONS_REQUESTED` entries to `APPROVED_PERMISSION_PATTERNS` when they include a reusable pattern. Pass the updated registry to the next reviewer.
-5. Otherwise: append to the pass log and apply the continuation gate below.
+1. Flip-flop: orchestrator classification is `FLIP_FLOP`. Stop.
+2. Permission registry: add approved `PERMISSIONS_REQUESTED` entries to `APPROVED_PERMISSION_PATTERNS` when they include a reusable pattern. Pass the updated registry to the next reviewer.
+3. Append the pass result to the pass log.
+4. Converged: three consecutive `CLEAN` classifications reached. Stop.
+5. Safety limit: pass count has reached 8. Stop.
+6. Otherwise: continue to the next pass.
 
-Continuation gate:
+Continuation rules:
 
-- Passes 1-4: continue only when `MATERIAL_ISSUES` is not `none` and `CONTINUE_REASON` names a concrete unfixed risk.
-- Passes 5-8: continue only when orchestrator classification is `BLOCKING`.
-- Stop when orchestrator classification is `MINOR_ONLY` or `CLEAN` after pass 4, even if the pass made edits.
-- Stop when changes are hardening, documentation, ordering, corruption validation, output formatting, test expansion, or clarity improvements unless the reviewer explains a concrete compile failure, test failure, data loss/corruption, incorrect runtime behavior, security exposure, or dependency-order blocker those edits prevented.
+- The clean streak increments only on `CLEAN`.
+- The clean streak resets to 0 after `BLOCKING`, `MATERIAL`, `MINOR_ONLY`, or `FLIP_FLOP`.
+- `MINOR_ONLY` never counts as a no-change pass.
 
-Clean-pass target:
+No-change target:
 
-- Before pass 5: three consecutive `MINOR_ONLY` or `CLEAN` orchestrator classifications.
-- From pass 5 onward: one `MINOR_ONLY` or `CLEAN` orchestrator classification.
+- Three consecutive `CLEAN` orchestrator classifications.
 
-Only concrete implementation-blocking risks justify late-loop continuation. `MINOR_NOTES`, wording polish, optional enhancements, alternative designs, and non-blocking hardening do not reset convergence.
+Only three consecutive no-change passes justify convergence. `MINOR_NOTES`, skipped optional enhancements, and non-blocking hardening proposals do not count as changes unless the reviewer actually edits the plan.
 
 ## Final Report
 

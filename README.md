@@ -95,7 +95,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.11.0
+0.12.0
 ```
 
 ## Skills
@@ -165,15 +165,14 @@ The orchestrator must forward each raw reviewer report unchanged before summariz
 BLOCKING | MATERIAL | MINOR_ONLY | CLEAN | FLIP_FLOP
 ```
 
-Only orchestrator-classified `BLOCKING` and `MATERIAL` passes reset convergence. `MINOR_ONLY` and `CLEAN` count toward convergence even if the reviewer made minor adjacent edits or reported skipped suggestions.
+Only orchestrator-classified `CLEAN` passes count toward convergence. `CLEAN` means the reviewer found no material issue and made no file edits; `MINOR_NOTES` and `SKIPPED_CHANGES` may still be present. `MINOR_ONLY` does not count as a no-change pass.
 
 Convergence rules:
 
-- Before pass 5, stop after three consecutive `MINOR_ONLY` or `CLEAN` orchestrator classifications.
-- From pass 5 onward, stop after one `MINOR_ONLY` or `CLEAN` classification.
+- Stop after three consecutive `CLEAN` orchestrator classifications.
 - Stop immediately on `FLIP_FLOP`.
 - Stop at the safety limit of 8 passes.
-- Passes 5-8 continue only for orchestrator-classified `BLOCKING` issues.
+- `BLOCKING`, `MATERIAL`, and `MINOR_ONLY` reset the no-change streak.
 
 Permission handling is advisory, not a bypass. If a reviewer reports an approved reusable command pattern, the orchestrator passes that pattern to later reviewers so they can keep command shapes stable, but Codex may still ask for runtime approval.
 
