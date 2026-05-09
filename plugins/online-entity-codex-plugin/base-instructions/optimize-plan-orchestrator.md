@@ -25,7 +25,7 @@ Your job is to control the loop:
 - Reset the no-change streak after orchestrator-classified `BLOCKING`, `MATERIAL`, or `MINOR_ONLY`.
 - Stop after three consecutive orchestrator-classified `CLEAN` passes.
 - Do not count `MINOR_ONLY` as a no-change pass.
-- Stop on convergence, flip-flop, safety limit, or user interruption.
+- Stop on convergence, flip-flop, the 20-reviewer-pass safety limit, or user interruption.
 
 Do not chase polish. Do not reinterpret optional suggestions as required work. Preserve the user's implementation direction unless a reviewer identifies a material correctness, production, verification, maintainability, or dependency-order problem.
 

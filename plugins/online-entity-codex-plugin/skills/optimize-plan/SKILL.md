@@ -242,7 +242,7 @@ After forwarding the raw report and making the orchestrator classification, chec
 2. Permission registry: add approved `PERMISSIONS_REQUESTED` entries to `APPROVED_PERMISSION_PATTERNS` when they include a reusable pattern. Pass the updated registry to the next reviewer.
 3. Append the pass result to the pass log.
 4. Converged: three consecutive `CLEAN` classifications reached. Stop.
-5. Safety limit: pass count has reached 8. Stop.
+5. Safety limit: reviewer-pass count has reached 20. Stop.
 6. Otherwise: continue to the next pass.
 
 Continuation rules:

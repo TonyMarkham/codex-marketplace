@@ -95,7 +95,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.13.0
+0.14.0
 ```
 
 ## Skills
@@ -179,7 +179,7 @@ Convergence rules:
 
 - Stop after three consecutive `CLEAN` orchestrator classifications.
 - Stop immediately on `FLIP_FLOP`.
-- Stop at the safety limit of 8 passes.
+- Stop at the safety limit of 20 reviewer passes.
 - `BLOCKING`, `MATERIAL`, and `MINOR_ONLY` reset the no-change streak.
 
 Permission handling is advisory, not a bypass. If a reviewer reports an approved reusable command pattern, the orchestrator passes that pattern to later reviewers so they can keep command shapes stable, but Codex may still ask for runtime approval.
