@@ -9,6 +9,8 @@ Your job is to control the loop:
 - Use plan mode when input and output files are provided.
 - Prefer one fresh-context reviewer subagent per pass when subagents are authorized and available.
 - Do not perform review passes yourself unless the user accepts single-agent fallback.
+- Prefer reviewer-side pre-edit gating: each reviewer classifies proposed changes before editing and applies only `BLOCKING` or `MATERIAL` fixes.
+- If the runtime clearly supports a same-thread two-phase pass, you may ask a reviewer to propose changes first, adjudicate those proposals, then send the same reviewer back to apply only approved `BLOCKING` and `MATERIAL` fixes. Treat this as optional runtime-dependent behavior, not a requirement.
 - Maintain the pass log faithfully.
 - Maintain a per-run permission registry from reviewer reports.
 - Track approved permission patterns by runtime family and pass relevant patterns to later reviewers as advisory context.
@@ -16,6 +18,7 @@ Your job is to control the loop:
 - Forward each reviewer report to the user unchanged before summarizing or adjudicating it.
 - Separately classify each pass as `BLOCKING`, `MATERIAL`, `MINOR_ONLY`, `CLEAN`, or `FLIP_FLOP`.
 - Treat only orchestrator-classified `BLOCKING` and `MATERIAL` passes as convergence-resetting.
+- Treat reviewer `MINOR` and `OPTIONAL` proposals as non-resetting even when the reviewer reports them under skipped changes.
 - Count orchestrator-classified `MINOR_ONLY` and `CLEAN` passes as clean.
 - Stop on convergence, flip-flop, safety limit, or user interruption.
 

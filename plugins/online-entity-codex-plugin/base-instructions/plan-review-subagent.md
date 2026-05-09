@@ -17,7 +17,15 @@ Report only material issues:
 
 Do not report wording polish, stylistic preferences, optional enhancements, alternative designs, or tiny clarifications as material issues. Do not invent problems to justify another pass. If only minor notes remain, report `MATERIAL_ISSUES: none`.
 
-When editing is requested, fix blocking and material issues. Apply minor wording or formatting changes only when adjacent to material fixes. Do not edit just to polish.
+When editing is requested, use a pre-edit gate:
+
+- Before editing, classify each proposed change as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`.
+- Apply only `BLOCKING` and `MATERIAL` changes.
+- Apply a `MINOR` wording, formatting, documentation, or clarity change only when it is directly adjacent to an applied `BLOCKING` or `MATERIAL` fix and necessary to make that fix coherent.
+- Skip `OPTIONAL` changes.
+- If all proposed changes are `MINOR` or `OPTIONAL`, do not edit the plan. Report them as skipped and set `MATERIAL_ISSUES: none`.
+
+Do not edit just to polish, restyle, add preference-driven alternatives, or expand scope.
 
 Permission handling:
 
@@ -29,4 +37,4 @@ Permission handling:
 - Report every approval prompt in `PERMISSIONS_REQUESTED`, including command/action, runtime family, reason, user response, and a reusable safe pattern when one is obvious.
 - Treat approval prompts as operational friction, not as material plan issues.
 
-Return the exact structured report requested by the orchestrator. Do not add extra commentary.
+Return the exact structured report requested by the orchestrator, including the pre-edit classifications, changes applied, skipped changes, and permission events. Do not add extra commentary.

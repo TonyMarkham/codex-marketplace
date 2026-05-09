@@ -45,13 +45,22 @@ Prefer fresh-context subagents, one per pass, when the active runtime supports t
 
 If the runtime requires explicit authorization for subagents and the user has not provided it, ask for permission before starting the pass loop. If subagents are unavailable or the user declines, offer a single-agent fallback and label it clearly as lower isolation than the original fresh-context workflow.
 
+Reviewer edit gating:
+
+- Default to reviewer-side pre-edit gating. Before editing the plan, the reviewer must classify each proposed change as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`.
+- Reviewers may apply only `BLOCKING` and `MATERIAL` changes.
+- Reviewers may apply a `MINOR` change only when it is directly adjacent to an applied `BLOCKING` or `MATERIAL` change and necessary to make that fix coherent.
+- Reviewers must skip `OPTIONAL` changes.
+- If the active runtime clearly supports keeping the same reviewer thread alive for a two-phase pass, the orchestrator may ask the reviewer to report proposed changes first, adjudicate them, then send the same reviewer back to apply only approved `BLOCKING` and `MATERIAL` changes. Do not require this path unless the runtime can actually support it.
+- If the runtime does not clearly support that two-phase continuation, keep the reviewer-side pre-edit gate as the robust default.
+
 ## Pass Log
 
 Maintain a pass log in working memory:
 
 ```text
-Pass 1: ORCHESTRATOR_CLASSIFICATION: [...] | MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
-Pass 2: ORCHESTRATOR_CLASSIFICATION: [...] | MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...]
+Pass 1: ORCHESTRATOR_CLASSIFICATION: [...] | MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...] | SKIPPED_CHANGES: [...]
+Pass 2: ORCHESTRATOR_CLASSIFICATION: [...] | MATERIAL_ISSUES: [...] | MINOR_NOTES: [...] | CHANGES_MADE: [...] | SKIPPED_CHANGES: [...]
 ```
 
 Maintain a per-run permission registry:
@@ -77,10 +86,10 @@ Keep permission patterns ambidextrous:
 
 ## Each Pass
 
-Run exactly one thorough review-and-fix pass. For subagent mode, give the pass agent this task with the pass number, file paths, mode instructions, and pass log filled in:
+Run exactly one thorough gated review-and-fix pass. For subagent mode, give the pass agent this task with the pass number, file paths, mode instructions, and pass log filled in:
 
 ```text
-You are performing pass N of a plan optimization loop. Do one thorough review-and-fix pass on the plan document, then report back with a structured summary.
+You are performing pass N of a plan optimization loop. Do one thorough gated review-and-fix pass on the plan document, then report back with a structured summary.
 
 Model preference:
 Use the reviewer model and reasoning effort selected by the orchestrator for this pass. If no reviewer model was selected, prefer gpt-5.4-mini with high reasoning when available. If the runtime cannot set a subagent model or reasoning effort, continue with the runtime default and state that in the pass summary.
@@ -91,10 +100,10 @@ Act as a fresh-context production plan reviewer. If a plan-review-subagent base 
 Mode: FILE_LOOP or PLAN_MODE
 
 FILE_LOOP:
-Read <file>, audit it, and edit it in place to resolve all genuine issues found.
+Read <file>, audit it, and edit it in place only for proposed changes that pass the pre-edit gate.
 
 PLAN_MODE:
-Read <input_file>. Think holistically before making edits. When you have a complete picture of all issues and their resolutions, write the full revised plan to <output_file>. Rewrite the complete document rather than patching isolated fragments.
+Read <input_file>. Think holistically before making edits. When you have a complete picture of all proposed changes and their classifications, write the full revised plan to <output_file> with only changes that pass the pre-edit gate. Rewrite the complete document rather than patching isolated fragments.
 
 Previous pass history:
 <paste the full pass log here, or "This is pass 1. No prior history." if first pass>
@@ -112,12 +121,23 @@ Review instructions:
 4. Do not invent problems, create make-work, or turn polish into issues. Do not report wording polish, stylistic preferences, optional enhancements, alternative designs, or tiny clarifications as material issues.
 5. Pay particular attention to dependency ordering. Verify that every step only relies on outputs from earlier steps. Flag any case where a step depends on something produced later.
 6. Before flagging an issue, check the pass history. Do not re-raise anything already listed in a previous pass's CHANGES_MADE unless the change introduced a new concrete material problem.
-7. Fix blocking and material issues according to the mode instructions above. Apply minor wording or formatting edits only when they are adjacent to material fixes; do not edit just to polish.
-8. You are authorized to read and edit the target plan file for this pass. Do not ask semantic permission to inspect or edit that target file; only runtime approval prompts may require user interaction.
-9. Prefer built-in file/search tools for target-file inspection. Use shell commands for repo verification when they materially help.
-10. When using shell commands, use native stable read-only command shapes for the active runtime family. Keep equivalent command forms consistent with the preapproved patterns where possible.
-11. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include the runtime family and a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
-12. Return only the structured report below.
+7. Before editing, create a pre-edit classification list. Classify each proposed change as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`.
+8. Apply only `BLOCKING` and `MATERIAL` changes according to the mode instructions above.
+9. Apply a `MINOR` wording, formatting, documentation, or clarity change only when it is directly adjacent to an applied `BLOCKING` or `MATERIAL` fix and necessary to make that fix coherent.
+10. Skip `OPTIONAL` changes. Do not edit just to polish, restyle, add preference-driven alternatives, or expand scope.
+11. If all proposed changes are `MINOR` or `OPTIONAL`, do not edit the plan. Report them under `SKIPPED_CHANGES` and set `MATERIAL_ISSUES: none`.
+12. You are authorized to read and edit the target plan file for this pass. Do not ask semantic permission to inspect or edit that target file; only runtime approval prompts may require user interaction.
+13. Prefer built-in file/search tools for target-file inspection. Use shell commands for repo verification when they materially help.
+14. When using shell commands, use native stable read-only command shapes for the active runtime family. Keep equivalent command forms consistent with the preapproved patterns where possible.
+15. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include the runtime family and a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
+16. Return only the structured report below.
+
+PRE_EDIT_CLASSIFICATION:
+- BLOCKING: <proposed change and reason>
+- MATERIAL: <proposed change and reason>
+- MINOR: <proposed change and reason>
+- OPTIONAL: <proposed change and reason>
+(or "none")
 
 MATERIAL_ISSUES:
 - BLOCKING: <issue that would prevent implementation or cause incorrect production behavior>
@@ -138,6 +158,10 @@ MINOR_NOTES:
 CHANGES_MADE:
 - <change 1>
 - <change 2>
+(or "none")
+
+SKIPPED_CHANGES:
+- <minor or optional proposed change intentionally not applied, with classification>
 (or "none")
 
 PERMISSIONS_REQUESTED:
