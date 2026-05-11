@@ -72,30 +72,32 @@ Windows PowerShell:
 Get-ChildItem "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin"
 ```
 
-To verify that the `optimize-plan` skill is installed, check for:
+To verify that key skills are installed, check for:
 
 Linux/WSL:
 
 ```bash
 test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/optimize-plan/SKILL.md
+test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/guided-implement/SKILL.md
 ```
 
 Windows PowerShell:
 
 ```powershell
 Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\optimize-plan\SKILL.md"
+Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\guided-implement\SKILL.md"
 ```
 
 ## Plugin
 
 | Name | Description |
 | --- | --- |
-| `online-entity-codex-plugin` | Codex skills for iterative plan optimization, architecture review, and plugin-building review. |
+| `online-entity-codex-plugin` | Codex skills for iterative plan optimization, guided implementation, architecture review, and plugin-building review. |
 
 Current plugin version:
 
 ```text
-0.14.0
+0.15.0
 ```
 
 ## Skills
@@ -190,6 +192,37 @@ If a runtime clearly supports a same-thread two-phase reviewer pass, the orchest
 
 Review and refine implementation plans by checking evidence, assumptions, sequencing, verification steps, and Codex plugin/runtime constraints.
 
+### `guided-implement`
+
+Guide a human through implementing an approved plan one small manual coding step at a time. Codex acts as a teacher and reviewer, but does not edit files.
+
+Use it after a plan has been reviewed or optimized:
+
+```text
+Use $guided-implement on <plan-file>.
+```
+
+Useful variations:
+
+```text
+Use $guided-implement on <plan-file>, starting at step <n>.
+Use $guided-implement on <plan-file>. Verify my last edit, then give me the next step.
+Use $guided-implement on <plan-file>. Focus on the parser section first.
+```
+
+The skill must:
+
+- read the plan before selecting the next step
+- read every existing target file before proposing edits to it
+- present exactly one implementation step at a time
+- avoid writing, patching, formatting, or deleting files
+- include the target path relative to the repo root
+- prefer `Find` / `Replace` instructions for existing files
+- use exact `Insert After`, `Insert This`, and `Insert Before` landmarks for insertions
+- stop after each step and wait for the user
+
+This is intentionally separate from `optimize-plan`: `optimize-plan` hardens the plan, while `guided-implement` teaches the user through applying the already-approved plan manually.
+
 ## Profile Instructions
 
 The plugin ships base instruction Markdown files under:
@@ -222,6 +255,10 @@ model_reasoning_effort = "high"
 [profiles.plugin-builder]
 model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/plugin-builder.md"
 model_reasoning_effort = "high"
+
+[profiles.guided-implementation-teacher]
+model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/guided-implementation-teacher.md"
+model_reasoning_effort = "medium"
 ```
 
 The `profiles/` directory in this repo contains editable examples for a local checkout. Adjust paths after install if you want to use the cached plugin copy.
@@ -230,6 +267,12 @@ Run a profile with:
 
 ```bash
 codex --profile optimize-plan-orchestrator
+```
+
+For a session that defaults to manual, teacher-style implementation guidance:
+
+```bash
+codex --profile guided-implementation-teacher
 ```
 
 The `optimize-plan` skill still includes its review contract inline because current Codex runtimes may not support assigning a separate profile or `model_instructions_file` to each spawned subagent.
@@ -262,9 +305,12 @@ codex-marketplace/
         strict-auditor.md
         architect.md
         plugin-builder.md
+        guided-implementation-teacher.md
         optimize-plan-orchestrator.md
         plan-review-subagent.md
       skills/
+        guided-implement/
+          SKILL.md
         optimize-plan/
           SKILL.md
         plan-refiner/
@@ -279,6 +325,7 @@ codex-marketplace/
     strict-auditor.toml
     architect.toml
     plugin-builder.toml
+    guided-implementation-teacher.toml
     optimize-plan-orchestrator.toml
     plan-review-subagent.toml
 ```

@@ -1,0 +1,3 @@
+[profiles.guided-implementation-teacher]
+model_instructions_file = "../plugins/online-entity-codex-plugin/base-instructions/guided-implementation-teacher.md"
+model_reasoning_effort = "medium"
