@@ -266,14 +266,6 @@ For a one-off audit inside a normal Codex session, invoke the skill directly:
 Use $colab-audit-plan on <plan-file>. Do not edit.
 ```
 
-For an entire collaborative planning session without editing config, start Codex with the base instruction file directly. This form works in both PowerShell and POSIX shells because both expand `$HOME` inside double quotes; forward slashes are accepted by Windows path handling and by Linux/macOS:
-
-```bash
-codex -c model_instructions_file="$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/colab-audit-plan.md"
-```
-
-Do not use `~` in this quoted `-c` value. Shells do not expand it consistently inside quoted strings.
-
 ## Base Instruction Startup
 
 The plugin ships base instruction Markdown files under:
@@ -282,19 +274,77 @@ The plugin ships base instruction Markdown files under:
 plugins/online-entity-codex-plugin/base-instructions/
 ```
 
-Codex does not automatically use those files just because the plugin is installed. Start Codex with `-c model_instructions_file=...` when you want the whole session to use one of them.
+Codex does not automatically use those files just because the plugin is installed. For a whole-session behavior change, Codex currently needs `model_instructions_file` to point at a real file.
 
-For a session that defaults to manual, teacher-style implementation guidance, replace `<version>` with the installed plugin version:
+Installed plugin cache paths are versioned. Do not hard-code `<version>` unless you already verified the installed version. Use a shell snippet that locates the installed instruction file first.
 
-```bash
-codex -c model_instructions_file="$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/guided-implementation-teacher.md"
+PowerShell, collaborative plan auditing:
+
+```powershell
+$pluginRoot = "$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin"
+
+$instructions = Get-ChildItem $pluginRoot -Directory |
+    ForEach-Object {
+        $path = Join-Path $_.FullName "base-instructions/colab-audit-plan.md"
+        if (Test-Path $path) { $path }
+    } |
+    Sort-Object -Descending |
+    Select-Object -First 1
+
+codex -c model_instructions_file="$instructions"
 ```
 
-For a session that defaults to collaborative plan auditing and permission-gated plan patching:
+Linux/macOS/WSL, collaborative plan auditing:
 
 ```bash
-codex -c model_instructions_file="$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/colab-audit-plan.md"
+instructions="$(
+  find "$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin" \
+    -mindepth 2 \
+    -maxdepth 2 \
+    -path '*/base-instructions/colab-audit-plan.md' \
+    -type f |
+  sort -V |
+  tail -n 1
+)"
+
+codex -c model_instructions_file="$instructions"
 ```
+
+PowerShell, teacher-style implementation guidance:
+
+```powershell
+$pluginRoot = "$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin"
+
+$instructions = Get-ChildItem $pluginRoot -Directory |
+    ForEach-Object {
+        $path = Join-Path $_.FullName "base-instructions/guided-implementation-teacher.md"
+        if (Test-Path $path) { $path }
+    } |
+    Sort-Object -Descending |
+    Select-Object -First 1
+
+codex -c model_instructions_file="$instructions"
+```
+
+Linux/macOS/WSL, teacher-style implementation guidance:
+
+```bash
+instructions="$(
+  find "$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin" \
+    -mindepth 2 \
+    -maxdepth 2 \
+    -path '*/base-instructions/guided-implementation-teacher.md' \
+    -type f |
+  sort -V |
+  tail -n 1
+)"
+
+codex -c model_instructions_file="$instructions"
+```
+
+These startup snippets are a workaround for the current plugin/runtime behavior: installed plugin files exist on disk, but `model_instructions_file` does not appear to support a stable plugin-resource alias.
+
+Do not use `~` in quoted `-c` values. Shells do not expand it consistently inside quoted strings.
 
 The `optimize-plan` skill still includes its review contract inline because current Codex runtimes may not support assigning a separate profile or `model_instructions_file` to each spawned subagent.
 
