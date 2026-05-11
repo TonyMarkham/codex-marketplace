@@ -99,7 +99,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.19.0
+0.21.0
 ```
 
 ## Skills
@@ -253,12 +253,26 @@ The audit reports:
 
 - existing repo surface for each major planned behavior
 - whether the plan modifies, extends, replaces, or newly adds implementation
+- type/file inventory for planned structs, enums, modules, public APIs, and helper types
+- implementability gaps where the plan uses broad prose instead of concrete repo-local API, control-flow, data-flow, error-flow, or test-shape guidance
 - repo-pattern violations versus intentional new behavior
 - existing behavior compatibility risks
 - actual plan defects
 - unverifiable assumptions
 
-By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings.
+By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings. It must not over-infer intent, prioritize task completion over permission boundaries, rationalize unapproved edits as helpful, or claim repo evidence without inspecting the relevant repo surface in the current session.
+
+If the user points out a specific defect and asks for a fix, the skill treats that as approval for that exact correction only. It must not broaden the request into a new audit, rewrite, cleanup, refactor, or alternate workflow.
+
+If the model disagrees with the requested fix, it must disagree in conversation before editing:
+
+1. Stop before editing.
+2. State the concrete conflict.
+3. Give repo evidence if relevant.
+4. Ask how to proceed.
+5. Do not edit until the user approves the revised direction.
+
+After any approved patch, the skill must inspect the diff and report a patch self-audit covering approved scope, repo-rule checks, type/file inventory validity, implementation-detail preservation, unsupported APIs, and unapproved behavior changes.
 
 For a one-off audit inside a normal Codex session, invoke the skill directly:
 
@@ -310,6 +324,38 @@ instructions="$(
 codex -c model_instructions_file="$instructions"
 ```
 
+PowerShell, general collaboration contract:
+
+```powershell
+$pluginRoot = "$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin"
+
+$instructions = Get-ChildItem $pluginRoot -Directory |
+    ForEach-Object {
+        $path = Join-Path $_.FullName "base-instructions/collaboration-contract.md"
+        if (Test-Path $path) { $path }
+    } |
+    Sort-Object -Descending |
+    Select-Object -First 1
+
+codex -c model_instructions_file="$instructions"
+```
+
+Linux/macOS/WSL, general collaboration contract:
+
+```bash
+instructions="$(
+  find "$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin" \
+    -mindepth 2 \
+    -maxdepth 2 \
+    -path '*/base-instructions/collaboration-contract.md' \
+    -type f |
+  sort -V |
+  tail -n 1
+)"
+
+codex -c model_instructions_file="$instructions"
+```
+
 PowerShell, teacher-style implementation guidance:
 
 ```powershell
@@ -342,7 +388,7 @@ instructions="$(
 codex -c model_instructions_file="$instructions"
 ```
 
-These startup snippets are a workaround for the current plugin/runtime behavior: installed plugin files exist on disk, but `model_instructions_file` does not appear to support a stable plugin-resource alias.
+These startup snippets are the current required startup procedure for whole-session base instructions from an installed plugin: installed plugin files exist on disk, installed paths are versioned, and `model_instructions_file` does not appear to support a stable plugin-resource alias.
 
 Do not use `~` in quoted `-c` values. Shells do not expand it consistently inside quoted strings.
 
@@ -376,6 +422,7 @@ codex-marketplace/
         strict-auditor.md
         architect.md
         plugin-builder.md
+        collaboration-contract.md
         guided-implementation-teacher.md
         colab-audit-plan.md
         optimize-plan-orchestrator.md

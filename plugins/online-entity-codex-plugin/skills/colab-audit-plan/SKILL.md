@@ -21,11 +21,53 @@ Use $colab-audit-plan to patch approved findings A1 and B2, then stop.
 - Default mode is audit-only.
 - Do not write, modify, delete, move, format, or patch files unless the current user turn explicitly asks to patch specific findings.
 - Do not infer patch permission from prior turns, user frustration, the existence of findings, or the plan being wrong.
+- Do not over-infer intent. Use the user's literal current-turn request as the authority for scope, mode, and permission.
+- Do not prioritize task completion, perceived helpfulness, complexity reduction, or momentum over permission boundaries.
+- Do not rationalize an unapproved edit as helpful, obvious, small, safe, implied, or necessary. If it is not approved by the current-turn scope, do not do it.
+- Do not collapse disagreement into action. If you disagree, use the disagreement protocol before any edit.
+- Do not claim repo evidence, verification, compatibility, or alignment unless you actually inspected the relevant files, commands, tests, or outputs in this session.
+- When the user points out a specific defect and asks for a fix, treat that as approval for that exact correction only.
+- Do not broaden a specific fix request into an audit, rewrite, cleanup, refactor, or alternate workflow.
+- Preserve the user's requested fix shape unless it is impossible or conflicts with repo evidence. If it conflicts, state the concrete conflict and stop.
+- Do not override explicit user constraints with "best practice", "recommended", "safer", or "cleaner" alternatives unless the user asks for alternatives.
+- Do not change, reinterpret, narrow, broaden, or replace the user's directive. If there is friction between what you think should be done and what the user asked for, stop and communicate the conflict before doing anything.
+- Do not be authoritative over the user. Surface evidence, clarify tradeoffs when asked, and execute the user's chosen audit workflow.
 - Do not compress, summarize, rewrite, or clean up the plan as a goal.
 - Preserve implementation detail unless a specific evidence-backed finding proves it is wrong.
 - Preserve file paths, structs, functions, data ownership, error flow, ordering, tests, code blocks, and target behavior unless the finding requires changing them.
 - Code blocks in plans are presumed to be real implementation instructions. Do not replace them with prose unless the code is demonstrably wrong and the approved patch requires it.
 - Stop if the user challenges the premise, rejects a finding, or asks you not to proceed.
+
+## Disagreement Protocol
+
+Disagree in conversation, not through unapproved file edits.
+
+If the user's request and your judgment conflict:
+
+1. Stop before editing.
+2. State the concrete conflict.
+3. Give repo evidence if relevant.
+4. Ask how to proceed.
+5. Do not edit until the user approves the revised direction.
+
+## Failure-Mode Corrections
+
+When you notice one of these model failure pressures, apply the harness rule instead:
+
+- If you want to make progress by editing, but edit permission is not explicit, switch to audit output and ask for approval.
+- If you want to broaden a narrow user request, restate the narrow request and perform only that scope.
+- If you want to replace the user's workflow with a cleaner workflow, use the disagreement protocol.
+- If you want to remove detail to make a patch easier, preserve or increase detail and restructure it into repo-shaped form.
+- If you want to claim the plan is repo-aligned, first inspect the relevant repo files and include the evidence.
+- If you want to summarize because the plan is long, identify the exact section and finding instead; do not compress away implementation instructions.
+- If you find a new weakness in this workflow while using it, report the weakness as a proposed harness-rule change, not just as chat commentary.
+
+## Implementability Is Part Of Audit
+
+- A plan is defective when it requires implementers to invent APIs, helper signatures, control flow, data flow, storage validation, error handling, or test shape that should be specified from repo-local evidence.
+- Prose-only behavioral requirements are `MATERIAL` findings when the target repo needs concrete implementation instructions to execute the plan safely and consistently.
+- Do not accept broad requirements such as "validate rows", "maintain cache", "render safely", or "use a parser" unless the plan also identifies the repo-local functions, helper shapes, data flow, error path, and verification shape needed to implement them.
+- Preserve concrete implementation detail. If fixing an implementability gap requires adding helper APIs, types, control flow, or data flow, make those additions concrete and check them against repo patterns.
 
 ## Modes
 
@@ -40,15 +82,44 @@ Use audit mode unless the current user turn explicitly asks for patching.
 
 ### Patch Mode
 
-Use patch mode only when the current user turn explicitly identifies approved findings or a narrow approved patch set.
+Use patch mode only when the current user turn explicitly identifies approved findings, a narrow approved patch set, or a specific defect/fix request.
 
 1. Re-read the plan file before patching.
-2. Re-check the repo evidence for each approved finding.
-3. Patch only the approved finding or findings.
+2. Re-check the repo evidence for each approved finding or user-identified defect.
+3. Patch only the approved finding, findings, or exact user-identified defect.
 4. Use the smallest diff that preserves implementation detail.
 5. Stop after the approved patch set.
 
-If a requested patch would remove implementation detail, replace implementation detail with prose, invent a new abstraction, or affect behavior not named by the approved finding, stop and explain the blocker.
+If a requested patch would remove implementation detail, replace implementation detail with prose, or affect behavior not named by the approved finding, stop and explain the blocker.
+
+If fixing an approved finding requires adding or reshaping a helper API, type, module, error path, or abstraction, do not invent it casually. First verify the shape against repo evidence and repo organization rules, include it in the type/file inventory, then patch only if it remains within the approved finding.
+
+### No Shortcut Patches
+
+When patching an approved finding:
+
+- Do not remove concrete implementation detail merely to avoid a repo-pattern violation.
+- Do not replace code blocks with prose unless the approved finding specifically requires removing invalid code.
+- If a correction requires splitting concepts into multiple files, modules, sections, or code blocks, perform the full split.
+- If a patch would require a new helper API, type, module, or abstraction, verify it against repo patterns and include it in the type/file inventory before reporting success.
+
+### Patch Self-Audit
+
+After patching and before reporting success:
+
+1. Re-read every patched section.
+2. Inspect the actual diff.
+3. Verify:
+   - the patch only addresses approved findings or the explicitly approved narrow patch set;
+   - no repo-pattern violation was introduced;
+   - the type/file inventory is still valid;
+   - implementation detail was preserved or increased;
+   - concrete code blocks remain intended implementation detail;
+   - no unsupported API, struct, module, error flow, or helper was invented without repo evidence;
+   - existing behavior compatibility was not changed outside the approved finding.
+4. If the patch introduced a new defect, fix it if it is within the approved scope; otherwise stop and report the blocker.
+
+Do not claim the patch is complete until this self-audit is done.
 
 ## Repo-Surface Audit
 
@@ -67,6 +138,20 @@ Treat these as material findings:
 - the plan omits required compatibility work for existing behavior, tests, commands, storage, or user-facing output
 
 If no existing implementation is found, state what searches or files support that conclusion.
+
+## Type/File Inventory Gate
+
+When a plan creates, moves, or materially changes structs, enums, modules, public APIs, or helper types, the audit must include a type/file inventory:
+
+- type or module name;
+- planned file path;
+- whether the file already has or will have another primary struct, enum, or module;
+- relevant repo organization rule;
+- pass/fail status.
+
+If repo instructions require one primary struct or enum per file, treat a plan that puts multiple primary structs or enums in one file as `MATERIAL` or `BLOCKING` unless the plan explicitly justifies an exception with repo evidence.
+
+If the audit finds a type/file mismatch, the required correction must preserve implementation detail by splitting the planned types into appropriate files instead of deleting detail or replacing code with prose.
 
 ## Finding Rules
 
@@ -104,6 +189,14 @@ EXISTING_REPO_SURFACE:
 PLAN_ALIGNMENT:
 - <modifies existing implementation | extends existing implementation | replaces existing implementation | adds new implementation because none exists>: <evidence>
 
+TYPE_FILE_INVENTORY:
+- <TypeName or ModuleName> -> <planned file path> | repo rule: <rule> | status: pass/fail
+(or "none")
+
+IMPLEMENTABILITY_GAPS:
+- <plan section>: <missing concrete API/control flow/data flow/error flow/test shape>
+(or "none")
+
 FINDINGS:
 
 FINDING A1
@@ -132,6 +225,14 @@ PATCHED_FINDINGS:
 
 FILES_CHANGED:
 - <path>
+
+PATCH_SELF_AUDIT:
+- approved scope only: yes/no
+- repo rules rechecked: yes/no
+- type/file inventory still valid: yes/no
+- implementation detail preserved or increased: yes/no
+- unsupported APIs introduced: yes/no
+- existing behavior changed outside approved scope: yes/no
 
 LIMITS:
 - <anything intentionally not patched, or "none">
