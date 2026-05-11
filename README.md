@@ -97,7 +97,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.15.0
+0.17.0
 ```
 
 ## Skills
@@ -215,11 +215,15 @@ The skill must:
 - read the plan before selecting the next step
 - read every existing target file before proposing edits to it
 - present exactly one implementation step at a time
+- avoid summarizing future steps after presenting the current step
 - avoid writing, patching, formatting, or deleting files
+- never infer edit permission from a plan, prior approval, or surrounding context
+- avoid authority performance, lecturing, scolding, and defensive replies
 - include the target path relative to the repo root
 - prefer `Find` / `Replace` instructions for existing files
 - use exact `Insert After`, `Insert This`, and `Insert Before` landmarks for insertions
 - stop after each step and wait for the user
+- stop immediately if the user says no, wait, stop, or challenges whether Codex should proceed
 
 This is intentionally separate from `optimize-plan`: `optimize-plan` hardens the plan, while `guided-implement` teaches the user through applying the already-approved plan manually.
 
