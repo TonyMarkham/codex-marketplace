@@ -260,6 +260,14 @@ The audit reports:
 
 By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings.
 
+For a one-off audit inside a normal Codex session, invoke the skill directly:
+
+```text
+Use $colab-audit-plan on <plan-file>. Do not edit.
+```
+
+For an entire collaborative planning session, use the `colab-audit-plan` profile instead. That makes audit-first, repo-evidence, permission-gated plan work the default session posture without repeating the skill name every turn.
+
 ## Profile Instructions
 
 The plugin ships base instruction Markdown files under:
@@ -314,6 +322,12 @@ For a session that defaults to manual, teacher-style implementation guidance:
 
 ```bash
 codex --profile guided-implementation-teacher
+```
+
+For a session that defaults to collaborative plan auditing and permission-gated plan patching:
+
+```bash
+codex --profile colab-audit-plan
 ```
 
 The `optimize-plan` skill still includes its review contract inline because current Codex runtimes may not support assigning a separate profile or `model_instructions_file` to each spawned subagent.
