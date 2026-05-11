@@ -137,21 +137,39 @@ Use the active runtime's native read-only command family consistently. On Window
 Review instructions:
 1. Read the plan file thoroughly before forming a conclusion.
 2. Audit every concrete claim against the actual codebase. Use file reads, rg/search, shell commands, and web browsing when needed to verify file paths, function signatures, type names, package APIs, dependency versions, and external SDK behavior referenced in the plan.
-3. Identify genuine material issues only. A material issue is one that would affect implementation correctness, production behavior, verification quality, maintainability of the planned change, or executable dependency order.
-4. Do not invent problems, create make-work, or turn polish into issues. Do not report wording polish, stylistic preferences, optional enhancements, alternative designs, or tiny clarifications as material issues.
-5. Pay particular attention to dependency ordering. Verify that every step only relies on outputs from earlier steps. Flag any case where a step depends on something produced later.
-6. Before flagging an issue, check the prior reviewer outcomes. Do not re-raise anything already listed in prior `CHANGES_MADE` unless the change introduced a new concrete material problem.
-7. Before editing, create a pre-edit classification list. Classify each proposed change as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`.
-8. Apply only `BLOCKING` and `MATERIAL` changes according to the mode instructions above.
-9. Apply a `MINOR` wording, formatting, documentation, or clarity change only when it is directly adjacent to an applied `BLOCKING` or `MATERIAL` fix and necessary to make that fix coherent.
-10. Skip `OPTIONAL` changes. Do not edit just to polish, restyle, add preference-driven alternatives, or expand scope.
-11. If all proposed changes are `MINOR` or `OPTIONAL`, do not edit the plan. Report them under `SKIPPED_CHANGES` and set `MATERIAL_ISSUES: none`.
-12. You are authorized to read and edit the target plan file for this review. Do not ask semantic permission to inspect or edit that target file; only runtime approval prompts may require user interaction.
-13. Prefer built-in file/search tools for target-file inspection. Use shell commands for repo verification when they materially help.
-14. When using shell commands, use native stable read-only command shapes for the active runtime family. Keep equivalent command forms consistent with the preapproved patterns where possible.
-15. Do not run probe commands solely to test whether approvals or shell execution work. Only request commands that materially help inspect the target plan or verify a concrete repo/doc/API claim.
-16. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include the runtime family and a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
-17. Return only the structured report below.
+3. Before accepting any planned implementation shape, identify the existing repo surface for each major planned feature or behavior. Search for overlapping commands, modules, structs, functions, traits, tests, data flow, storage, public APIs, and user-facing behavior.
+4. Classify each major planned feature as `modifies existing implementation`, `extends existing implementation`, `replaces existing implementation`, or `adds new implementation because none exists`. If no existing implementation is found, state the searches or files inspected that support that conclusion.
+5. Treat a greenfield or parallel implementation of behavior that already exists as `BLOCKING` unless the plan explicitly justifies replacement with repo evidence. Treat invented patterns, helper APIs, abstractions, data models, or error flows that bypass established repo-local patterns as `MATERIAL` or `BLOCKING` depending on implementation risk.
+6. Identify genuine material issues only. A material issue is one that would affect implementation correctness, production behavior, verification quality, maintainability of the planned change, repo-pattern alignment, or executable dependency order.
+7. Do not invent problems, create make-work, or turn polish into issues. Do not report wording polish, stylistic preferences, optional enhancements, alternative designs, or tiny clarifications as material issues.
+8. Pay particular attention to dependency ordering. Verify that every step only relies on outputs from earlier steps. Flag any case where a step depends on something produced later.
+9. Before flagging an issue, check the prior reviewer outcomes. Do not re-raise anything already listed in prior `CHANGES_MADE` unless the change introduced a new concrete material problem.
+10. Before editing, create a pre-edit classification list. Classify each proposed change as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`.
+11. Apply only `BLOCKING` and `MATERIAL` changes according to the mode instructions above.
+12. Apply a `MINOR` wording, formatting, documentation, or clarity change only when it is directly adjacent to an applied `BLOCKING` or `MATERIAL` fix and necessary to make that fix coherent.
+13. Skip `OPTIONAL` changes. Do not edit just to polish, restyle, add preference-driven alternatives, or expand scope.
+14. If all proposed changes are `MINOR` or `OPTIONAL`, do not edit the plan. Report them under `SKIPPED_CHANGES` and set `MATERIAL_ISSUES: none`.
+15. You are authorized to read and edit the target plan file for this review. Do not ask semantic permission to inspect or edit that target file; only runtime approval prompts may require user interaction.
+16. Prefer built-in file/search tools for target-file inspection. Use shell commands for repo verification when they materially help.
+17. When using shell commands, use native stable read-only command shapes for the active runtime family. Keep equivalent command forms consistent with the preapproved patterns where possible.
+18. Do not run probe commands solely to test whether approvals or shell execution work. Only request commands that materially help inspect the target plan or verify a concrete repo/doc/API claim.
+19. If a command/action requires user approval, record it under `PERMISSIONS_REQUESTED`. If approved, include the runtime family and a reusable exact command or safe prefix pattern when one is obvious. Do not stop the pass merely because approval was required.
+20. Return only the structured report below.
+
+EXISTING_REPO_SURFACE:
+- <existing files, functions, types, commands, tests, data flow, or behavior found for the planned feature>
+- <or "none found after searching/inspecting: ...">
+
+PLAN_ALIGNMENT:
+- <modifies existing implementation | extends existing implementation | replaces existing implementation | adds new implementation because none exists>: <evidence-backed explanation>
+
+REPO_PATTERN_MATCH:
+- <repo-local pattern the plan follows or violates, with evidence>
+- <or "none found">
+
+DUPLICATE_IMPLEMENTATION_RISK:
+yes | no
+- <reason>
 
 PRE_EDIT_CLASSIFICATION:
 - BLOCKING: <proposed change and reason>

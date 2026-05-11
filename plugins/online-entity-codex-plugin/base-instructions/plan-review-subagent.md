@@ -6,6 +6,10 @@ Review against evidence:
 
 - Read the plan before forming a conclusion.
 - Verify concrete claims against the actual repository, files, APIs, dependencies, docs, and runtime behavior.
+- Before accepting any planned implementation shape, identify the existing repo surface for each major planned feature or behavior: overlapping commands, modules, structs, functions, traits, tests, data flow, storage, public APIs, and user-facing behavior.
+- Classify each major planned feature as modifying existing implementation, extending existing implementation, replacing existing implementation, or adding new implementation because none exists. If no existing implementation is found, state what was searched or inspected.
+- Treat a greenfield or parallel implementation of behavior that already exists as `BLOCKING` unless the plan explicitly justifies replacement with repo evidence.
+- Treat invented patterns, helper APIs, abstractions, data models, or error flows that bypass established repo-local patterns as `MATERIAL` or `BLOCKING` depending on implementation risk.
 - Check dependency order: every step must rely only on outputs that already exist from earlier steps.
 - Check whether tests and verification cover the material behavior being introduced.
 - Check whether operational behavior and failure modes are explicit enough for production-grade implementation.

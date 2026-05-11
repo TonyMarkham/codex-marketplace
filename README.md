@@ -78,6 +78,7 @@ Linux/WSL:
 
 ```bash
 test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/optimize-plan/SKILL.md
+test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/colab-audit-plan/SKILL.md
 test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/guided-implement/SKILL.md
 ```
 
@@ -85,6 +86,7 @@ Windows PowerShell:
 
 ```powershell
 Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\optimize-plan\SKILL.md"
+Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\colab-audit-plan\SKILL.md"
 Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\guided-implement\SKILL.md"
 ```
 
@@ -97,7 +99,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.17.0
+0.19.0
 ```
 
 ## Skills
@@ -156,6 +158,10 @@ Each reviewer pass must:
 
 - read the plan before judging it
 - verify concrete claims against the repository, docs, APIs, and runtime behavior when needed
+- identify the existing repo surface for each major planned behavior before accepting the plan's implementation shape
+- classify planned work as modifying, extending, replacing, or newly adding implementation
+- treat duplicate greenfield implementations of existing behavior as blocking unless replacement is justified with repo evidence
+- check that the plan follows repo-local patterns for modules, APIs, data flow, errors, tests, and ownership
 - classify proposed edits before editing as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`
 - apply only `BLOCKING` and `MATERIAL` changes
 - apply `MINOR` changes only when directly adjacent to an applied material fix
@@ -227,6 +233,33 @@ The skill must:
 
 This is intentionally separate from `optimize-plan`: `optimize-plan` hardens the plan, while `guided-implement` teaches the user through applying the already-approved plan manually.
 
+### `colab-audit-plan`
+
+Audit an implementation plan against the current repo without editing by default.
+
+```text
+Use $colab-audit-plan on <plan-file>. Do not edit.
+```
+
+Patch only explicitly approved findings:
+
+```text
+Use $colab-audit-plan to patch findings A1 and B2 only, then stop.
+```
+
+The skill is intentionally separate from `optimize-plan`. `optimize-plan` is an iterative review/edit loop. `colab-audit-plan` is a permission-gated audit checkpoint for proving whether a plan matches existing repo behavior and patterns before any patching happens.
+
+The audit reports:
+
+- existing repo surface for each major planned behavior
+- whether the plan modifies, extends, replaces, or newly adds implementation
+- repo-pattern violations versus intentional new behavior
+- existing behavior compatibility risks
+- actual plan defects
+- unverifiable assumptions
+
+By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings.
+
 ## Profile Instructions
 
 The plugin ships base instruction Markdown files under:
@@ -246,6 +279,10 @@ model_reasoning_effort = "high"
 
 [profiles.plan-review-subagent]
 model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/plan-review-subagent.md"
+model_reasoning_effort = "high"
+
+[profiles.colab-audit-plan]
+model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/colab-audit-plan.md"
 model_reasoning_effort = "high"
 
 [profiles.strict-auditor]
@@ -310,9 +347,12 @@ codex-marketplace/
         architect.md
         plugin-builder.md
         guided-implementation-teacher.md
+        colab-audit-plan.md
         optimize-plan-orchestrator.md
         plan-review-subagent.md
       skills/
+        colab-audit-plan/
+          SKILL.md
         guided-implement/
           SKILL.md
         optimize-plan/
@@ -329,6 +369,7 @@ codex-marketplace/
     strict-auditor.toml
     architect.toml
     plugin-builder.toml
+    colab-audit-plan.toml
     guided-implementation-teacher.toml
     optimize-plan-orchestrator.toml
     plan-review-subagent.toml

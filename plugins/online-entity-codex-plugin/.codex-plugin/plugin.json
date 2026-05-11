@@ -1,7 +1,7 @@
 {
   "name": "online-entity-codex-plugin",
-  "version": "0.17.0",
-  "description": "Reusable Codex skills for iterative plan optimization, guided implementation, architecture review, and plugin-building review.",
+  "version": "0.19.0",
+  "description": "Reusable Codex skills for iterative plan optimization, collaborative plan audits, guided implementation, architecture review, and plugin-building review.",
   "author": {
     "name": "Tony Markham",
     "url": "https://github.com/TonyMarkham"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Online Entity Codex",
-    "shortDescription": "Plan optimization and guided implementation skills.",
-    "longDescription": "Reusable Codex skills for optimizing plans, teaching manual plan implementation, tightening architecture decisions, and building Codex plugin marketplace packages.",
+    "shortDescription": "Plan optimization, audit, and guided implementation skills.",
+    "longDescription": "Reusable Codex skills for optimizing plans, auditing implementation plans against repo evidence, teaching manual plan implementation, tightening architecture decisions, and building Codex plugin marketplace packages.",
     "developerName": "Tony Markham",
     "category": "Productivity",
     "capabilities": [
@@ -30,6 +30,7 @@
     "websiteURL": "https://github.com/TonyMarkham/codex-marketplace",
     "defaultPrompt": [
       "Use $optimize-plan on this implementation plan.",
+      "Use $colab-audit-plan on this implementation plan. Do not edit.",
       "Use $guided-implement on this approved plan.",
       "Tighten this plugin marketplace design.",
       "Audit this plan for gaps and assumptions."
