@@ -266,9 +266,15 @@ For a one-off audit inside a normal Codex session, invoke the skill directly:
 Use $colab-audit-plan on <plan-file>. Do not edit.
 ```
 
-For an entire collaborative planning session, use the `colab-audit-plan` profile instead. That makes audit-first, repo-evidence, permission-gated plan work the default session posture without repeating the skill name every turn.
+For an entire collaborative planning session without editing config, start Codex with the base instruction file directly. This form works in both PowerShell and POSIX shells because both expand `$HOME` inside double quotes; forward slashes are accepted by Windows path handling and by Linux/macOS:
 
-## Profile Instructions
+```bash
+codex -c model_instructions_file="$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/colab-audit-plan.md"
+```
+
+Do not use `~` in this quoted `-c` value. Shells do not expand it consistently inside quoted strings.
+
+## Base Instruction Startup
 
 The plugin ships base instruction Markdown files under:
 
@@ -276,58 +282,18 @@ The plugin ships base instruction Markdown files under:
 plugins/online-entity-codex-plugin/base-instructions/
 ```
 
-Codex does not automatically use those files just because the plugin is installed. Reference them from an active Codex config using `model_instructions_file`.
+Codex does not automatically use those files just because the plugin is installed. Start Codex with `-c model_instructions_file=...` when you want the whole session to use one of them.
 
-Example user-level config in `~/.codex/config.toml`, after replacing `<version>` with the installed plugin version:
-
-```toml
-[profiles.optimize-plan-orchestrator]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/optimize-plan-orchestrator.md"
-model_reasoning_effort = "high"
-
-[profiles.plan-review-subagent]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/plan-review-subagent.md"
-model_reasoning_effort = "high"
-
-[profiles.colab-audit-plan]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/colab-audit-plan.md"
-model_reasoning_effort = "high"
-
-[profiles.strict-auditor]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/strict-auditor.md"
-model_reasoning_effort = "high"
-
-[profiles.architect]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/architect.md"
-model_reasoning_effort = "high"
-
-[profiles.plugin-builder]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/plugin-builder.md"
-model_reasoning_effort = "high"
-
-[profiles.guided-implementation-teacher]
-model_instructions_file = "/home/tony/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/guided-implementation-teacher.md"
-model_reasoning_effort = "medium"
-```
-
-The `profiles/` directory in this repo contains editable examples for a local checkout. Adjust paths after install if you want to use the cached plugin copy.
-
-Run a profile with:
+For a session that defaults to manual, teacher-style implementation guidance, replace `<version>` with the installed plugin version:
 
 ```bash
-codex --profile optimize-plan-orchestrator
-```
-
-For a session that defaults to manual, teacher-style implementation guidance:
-
-```bash
-codex --profile guided-implementation-teacher
+codex -c model_instructions_file="$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/guided-implementation-teacher.md"
 ```
 
 For a session that defaults to collaborative plan auditing and permission-gated plan patching:
 
 ```bash
-codex --profile colab-audit-plan
+codex -c model_instructions_file="$HOME/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/base-instructions/colab-audit-plan.md"
 ```
 
 The `optimize-plan` skill still includes its review contract inline because current Codex runtimes may not support assigning a separate profile or `model_instructions_file` to each spawned subagent.
@@ -340,7 +306,7 @@ The `optimize-plan` skill still includes its review contract inline because curr
 
 - Codex CLI slash commands are built-in commands. This marketplace does not expose `/optimize-plan`; use `Use $optimize-plan ...`.
 - The Codex desktop app may not share WSL2 plugin state. For Windows desktop testing, install and verify the marketplace from Windows PowerShell so the plugin lands under the Windows Codex home.
-- Base instruction files are shipped with the plugin, but Codex uses them only when an active `config.toml` profile points at them with `model_instructions_file`.
+- Base instruction files are shipped with the plugin, but Codex uses them for a session only when started with `-c model_instructions_file=...` or another explicit Codex configuration mechanism.
 
 ## Structure
 
