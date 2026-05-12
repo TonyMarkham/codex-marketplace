@@ -23,7 +23,8 @@ Use $colab-audit-plan to patch approved findings A1 and B2, then stop.
 - Do not infer patch permission from prior turns, user frustration, the existence of findings, or the plan being wrong.
 - Do not over-infer intent. Use the user's literal current-turn request as the authority for scope, mode, and permission.
 - Do not prioritize task completion, perceived helpfulness, complexity reduction, or momentum over permission boundaries.
-- Optimize for correctness, evidence, and instruction fidelity over speed. Do not shorten inspection, skip repo evidence, omit self-audit, or give a fast answer when the task requires verification.
+- Optimize for correctness, evidence, and instruction fidelity over speed. Speed is not a success criterion. Do not shorten inspection, skip repo evidence, omit self-audit, or give a fast answer when the task requires verification.
+- Do not answer quickly. Answer only after the required verification for the requested claim. A fast unverified answer is a failure.
 - Do not rationalize an unapproved edit as helpful, obvious, small, safe, implied, or necessary. If it is not approved by the current-turn scope, do not do it.
 - Do not collapse disagreement into action. If you disagree, use the disagreement protocol before any edit.
 - Do not claim repo evidence, verification, compatibility, or alignment unless you actually inspected the relevant files, commands, tests, or outputs in this session.
@@ -58,6 +59,7 @@ When you notice one of these model failure pressures, apply the harness rule ins
 
 - If you want to make progress by editing, but edit permission is not explicit, switch to audit output and ask for approval.
 - If you want to answer quickly, but the audit requires repo inspection, inspect first and answer later.
+- If you want to provide a correctness, compatibility, repo-pattern, readiness, or acceptance conclusion before verification is complete, stop and report verification incomplete instead.
 - If you want to broaden a narrow user request, restate the narrow request and perform only that scope.
 - If you want to replace the user's workflow with a cleaner workflow, use the disagreement protocol.
 - If you want to remove detail to make a patch easier, preserve or increase detail and restructure it into repo-shaped form.
@@ -66,6 +68,37 @@ When you notice one of these model failure pressures, apply the harness rule ins
 - If you want to summarize because the plan is long, identify the exact section and finding instead; do not compress away implementation instructions.
 - If you cannot verify something within the current session, report it as residual uncertainty instead of treating it as clean.
 - If you find a new weakness in this workflow while using it, report the weakness as a proposed harness-rule change, not just as chat commentary.
+
+## Verification Before Conclusion Gate
+
+For plan audits, speed is not a success criterion. Latency is not a metric to optimize. A slower evidence-backed answer is always preferred over a fast partial answer.
+
+Before making any correctness, compatibility, repo-pattern, implementation-readiness, acceptance-criteria, or reviewer-handoff claim, complete all of these steps for the requested scope:
+
+1. Inspect the relevant plan section.
+2. Inspect the relevant repo files, tests, commands, schemas, or outputs.
+3. Cite the exact evidence used.
+4. State what was not checked.
+
+If those steps have not been completed, do not answer with a conclusion. Say the verification is incomplete instead.
+
+Use this exact response shape when a conclusion is requested but verification is incomplete:
+
+```text
+VERIFICATION COMPLETE:
+- no
+
+MISSING VERIFICATION:
+- <specific plan sections, repo files, tests, commands, schemas, or outputs not checked>
+
+CONCLUSION:
+- withheld
+
+NEXT ACTION:
+- verify before concluding
+```
+
+Do not use reassuring language to soften this. Do not imply partial verification is equivalent to full verification. Do not answer "probably", "likely", "should be", "seems", or "I think" as a substitute for evidence.
 
 ## Accuracy-First Audit Procedure
 

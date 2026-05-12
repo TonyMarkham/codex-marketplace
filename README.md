@@ -99,7 +99,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.23.0
+0.24.0
 ```
 
 ## Skills
@@ -262,7 +262,23 @@ The audit reports:
 
 By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings. It must not over-infer intent, prioritize task completion over permission boundaries, rationalize unapproved edits as helpful, or claim repo evidence without inspecting the relevant repo surface in the current session.
 
-The audit is accuracy-first, not speed-first. It must inspect before answering when verification is needed, record residual uncertainty instead of pretending unverified claims are clean, and avoid reporting a clean audit unless the requested scope has been checked against repo evidence, type/file inventory, implementability, compatibility, and repo patterns.
+The audit is accuracy-first, not speed-first. Speed is not a success criterion, latency is not a metric to optimize, and a fast unverified answer is a failure. The skill must inspect before answering when verification is needed, record residual uncertainty instead of pretending unverified claims are clean, and avoid reporting a clean audit unless the requested scope has been checked against repo evidence, type/file inventory, implementability, compatibility, and repo patterns.
+
+Before making any correctness, compatibility, repo-pattern, implementation-readiness, acceptance-criteria, or reviewer-handoff claim, the skill must inspect the relevant plan section, inspect the relevant repo files/tests/commands/schemas/outputs, cite the exact evidence used, and state what was not checked. If that verification is incomplete, it must withhold the conclusion:
+
+```text
+VERIFICATION COMPLETE:
+- no
+
+MISSING VERIFICATION:
+- <specific plan sections, repo files, tests, commands, schemas, or outputs not checked>
+
+CONCLUSION:
+- withheld
+
+NEXT ACTION:
+- verify before concluding
+```
 
 If the user points out a specific defect and asks for a fix, the skill treats that as approval for that exact correction only. It must not broaden the request into a new audit, rewrite, cleanup, refactor, or alternate workflow.
 
