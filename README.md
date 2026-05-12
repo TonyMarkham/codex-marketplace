@@ -99,7 +99,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.21.0
+0.22.0
 ```
 
 ## Skills
@@ -261,6 +261,8 @@ The audit reports:
 - unverifiable assumptions
 
 By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings. It must not over-infer intent, prioritize task completion over permission boundaries, rationalize unapproved edits as helpful, or claim repo evidence without inspecting the relevant repo surface in the current session.
+
+The audit is accuracy-first, not speed-first. It must inspect before answering when verification is needed, record residual uncertainty instead of pretending unverified claims are clean, and avoid reporting a clean audit unless the requested scope has been checked against repo evidence, type/file inventory, implementability, compatibility, and repo patterns.
 
 If the user points out a specific defect and asks for a fix, the skill treats that as approval for that exact correction only. It must not broaden the request into a new audit, rewrite, cleanup, refactor, or alternate workflow.
 
