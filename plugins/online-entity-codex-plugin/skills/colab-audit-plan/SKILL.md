@@ -27,6 +27,7 @@ Use $colab-audit-plan to patch approved findings A1 and B2, then stop.
 - Do not rationalize an unapproved edit as helpful, obvious, small, safe, implied, or necessary. If it is not approved by the current-turn scope, do not do it.
 - Do not collapse disagreement into action. If you disagree, use the disagreement protocol before any edit.
 - Do not claim repo evidence, verification, compatibility, or alignment unless you actually inspected the relevant files, commands, tests, or outputs in this session.
+- Do not claim the plan is ready, clean, satisfactory, reviewer-ready, repo-aligned, or safe to pass on unless the readiness claim gate has been completed after the most recent patch or plan change.
 - When the user points out a specific defect and asks for a fix, treat that as approval for that exact correction only.
 - Do not broaden a specific fix request into an audit, rewrite, cleanup, refactor, or alternate workflow.
 - Preserve the user's requested fix shape unless it is impossible or conflicts with repo evidence. If it conflicts, state the concrete conflict and stop.
@@ -61,6 +62,7 @@ When you notice one of these model failure pressures, apply the harness rule ins
 - If you want to replace the user's workflow with a cleaner workflow, use the disagreement protocol.
 - If you want to remove detail to make a patch easier, preserve or increase detail and restructure it into repo-shaped form.
 - If you want to claim the plan is repo-aligned, first inspect the relevant repo files and include the evidence.
+- If you want to reassure the user that the plan is ready, clean, satisfactory, confident, reviewer-ready, safe to pass on, or has no issues, first complete the readiness claim gate.
 - If you want to summarize because the plan is long, identify the exact section and finding instead; do not compress away implementation instructions.
 - If you cannot verify something within the current session, report it as residual uncertainty instead of treating it as clean.
 - If you find a new weakness in this workflow while using it, report the weakness as a proposed harness-rule change, not just as chat commentary.
@@ -79,6 +81,77 @@ Before reporting an audit result:
 8. Record anything not verified as residual uncertainty.
 
 Do not report a clean audit unless these steps are complete for the requested scope and all required output sections are filled.
+
+## Readiness Claim Gate
+
+Readiness and confidence claims are gated outputs, not social responses.
+
+Before saying or implying any of the following, complete and report a readiness verification pass after the most recent patch or plan change:
+
+- ready
+- clean
+- satisfied
+- confident
+- reviewer-ready
+- safe to pass on
+- pass it on
+- no issues
+- looks good
+- meets acceptance criteria
+- repo-aligned
+- good enough
+
+Patching known findings does not imply readiness. A patch can be correctly applied while the plan is still not ready.
+
+If the user asks whether you are satisfied, confident, ready, or whether the plan can go to a reviewer, and no readiness verification pass has been completed in the current turn or immediately prior turn after the most recent patch or plan change, answer with the mandatory readiness output and set `SATISFIED` to `no`.
+
+Do not answer readiness or confidence questions socially. Do not reassure the user to reduce friction. Do not infer that partial completion means full completion. Claim confidence only in proportion to completed verification.
+
+Speed is not an optimization target for plan audits. If you notice pressure to answer quickly, reassure, or move on, stop and complete the readiness verification gate instead.
+
+## Readiness Verification
+
+Before any readiness or confidence claim:
+
+1. Re-read the changed plan sections and enough surrounding context to verify the change in place.
+2. Re-check each previously reported finding against the patched text.
+3. Inspect the actual diff when files were patched.
+4. Check whether the patch introduced contradictions, compile defects in code blocks, missing imports or module wiring, unsupported APIs, repo-pattern violations, implementability gaps, or behavior changes outside approved scope.
+5. Re-check applicable acceptance criteria and repo evidence for the requested scope.
+6. State what was not verified.
+7. Give a final yes/no satisfaction statement.
+
+Use this exact shape for readiness answers:
+
+```text
+SATISFIED:
+- yes | no
+
+BASIS:
+- <only completed verification evidence>
+
+NOT VERIFIED:
+- <anything not checked, or "none">
+
+NEXT ACTION:
+- ready for reviewer | audit more | patch approved issues
+```
+
+If the verification pass was not completed, use:
+
+```text
+SATISFIED:
+- no
+
+BASIS:
+- The required post-patch/readiness verification pass has not been completed after the most recent patch or plan change.
+
+NOT VERIFIED:
+- <specific missing verification>
+
+NEXT ACTION:
+- audit more
+```
 
 ## Implementability Is Part Of Audit
 
@@ -138,6 +211,8 @@ After patching and before reporting success:
 4. If the patch introduced a new defect, fix it if it is within the approved scope; otherwise stop and report the blocker.
 
 Do not claim the patch is complete until this self-audit is done.
+
+Do not say the plan is ready, clean, satisfactory, reviewer-ready, repo-aligned, or safe to pass on after patching unless you also complete the readiness verification gate. Patch self-audit verifies the patch scope; it does not automatically verify whole-plan readiness.
 
 ## Repo-Surface Audit
 

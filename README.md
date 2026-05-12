@@ -99,7 +99,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.22.0
+0.23.0
 ```
 
 ## Skills
@@ -275,6 +275,24 @@ If the model disagrees with the requested fix, it must disagree in conversation 
 5. Do not edit until the user approves the revised direction.
 
 After any approved patch, the skill must inspect the diff and report a patch self-audit covering approved scope, repo-rule checks, type/file inventory validity, implementation-detail preservation, unsupported APIs, and unapproved behavior changes.
+
+Readiness and confidence claims are mechanically gated. After patching known findings, the skill must not say the plan is ready, clean, satisfactory, reviewer-ready, repo-aligned, safe to pass on, or has no issues until it performs a post-patch/readiness verification pass. Patching the known findings is not the same thing as proving the whole plan is ready.
+
+Readiness answers use this shape:
+
+```text
+SATISFIED:
+- yes | no
+
+BASIS:
+- <only completed verification evidence>
+
+NOT VERIFIED:
+- <anything not checked, or "none">
+
+NEXT ACTION:
+- ready for reviewer | audit more | patch approved issues
+```
 
 For a one-off audit inside a normal Codex session, invoke the skill directly:
 
