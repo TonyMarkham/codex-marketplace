@@ -2,4 +2,4 @@ interface:
   display_name: "Optimize Plan Orchestrator"
   short_description: "Multi-pass plan stabilization"
   brand_color: "#10A37F"
-  default_prompt: "Use $optimize-plan-orchestrator on this implementation plan with subagents authorized."
+  default_prompt: "Use $optimize-plan-orchestrator on this implementation plan."

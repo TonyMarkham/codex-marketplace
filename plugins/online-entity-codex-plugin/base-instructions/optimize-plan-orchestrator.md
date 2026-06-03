@@ -15,20 +15,21 @@ Use this profile when the user wants a Markdown implementation plan stabilized t
 ## Loop Rules
 
 1. Parse mode and paths before starting.
-2. Prefer one fresh `optimize-plan` custom agent or subagent per pass when subagents are authorized and available. Fresh means blind independent review of the current plan file, not merely a new process.
-3. Do not perform review passes yourself unless the user accepts single-agent fallback.
-4. Do not pass accumulated pass history, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions to pass workers.
-5. Pass each worker only static workflow instructions plus the mode, plan path, output path when applicable, and instruction to run one blind independent `$optimize-plan` pass on the current plan contents.
-6. In output-plan mode, pass 1 uses the original input path and output path; later passes use the output path as both input and output because it is the current plan.
-7. Track each valid pass's `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, `CHAIN_SUMMARY`, `CHANGES_MADE`, and `REMAINING_CONCERNS` privately after the worker returns.
-8. Count only valid blind passes with `ZERO_CHANGES_REQUIRED: yes` and no edits as clean.
-9. Reset the clean streak after any valid `ZERO_CHANGES_REQUIRED: no` or unclear pass.
-10. Stop after three consecutive clean blind passes.
-11. Stop on flip-flop only after privately comparing a completed worker report with prior pass history. Do not ask workers to detect flip-flop.
-12. Stop at twenty valid passes.
-13. Track invalid attempts separately from valid passes. Invalid attempts include contaminated worker prompts, denied required permissions before review, malformed worker outputs that cannot be interpreted, or worker runs that did not inspect the target plan.
-14. Stop if invalid attempts exceed three total or if the same invalid-attempt cause repeats after one clean rerun attempt.
-15. Stop on missing input, denied required permission, unrecoverable blocker, nonrecoverable worker-prompt contamination, or user interruption.
+2. Treat a direct request to use `optimize-plan-orchestrator` as authorization for the required fresh `optimize-plan` custom agents or subagents, unless the current user turn asks for no subagents, fallback, single-agent mode, or otherwise restricts delegation. Do not ask an extra authorization question merely because the prompt omitted wording such as "with subagents authorized."
+3. Prefer one fresh `optimize-plan` custom agent or subagent per pass when available. Fresh means blind independent review of the current plan file, not merely a new process.
+4. Do not perform review passes yourself unless the user accepts single-agent fallback.
+5. Do not pass accumulated pass history, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions to pass workers.
+6. Pass each worker only static workflow instructions plus the mode, plan path, output path when applicable, and instruction to run one blind independent `$optimize-plan` pass on the current plan contents.
+7. In output-plan mode, pass 1 uses the original input path and output path; later passes use the output path as both input and output because it is the current plan.
+8. Track each valid pass's `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, `CHAIN_SUMMARY`, `CHANGES_MADE`, and `REMAINING_CONCERNS` privately after the worker returns.
+9. Count only valid blind passes with `ZERO_CHANGES_REQUIRED: yes` and no edits as clean.
+10. Reset the clean streak after any valid `ZERO_CHANGES_REQUIRED: no` or unclear pass.
+11. Stop after three consecutive clean blind passes.
+12. Stop on flip-flop only after privately comparing a completed worker report with prior pass history. Do not ask workers to detect flip-flop.
+13. Stop at twenty valid passes.
+14. Track invalid attempts separately from valid passes. Invalid attempts include contaminated worker prompts, denied required permissions before review, malformed worker outputs that cannot be interpreted, or worker runs that did not inspect the target plan.
+15. Stop if invalid attempts exceed three total or if the same invalid-attempt cause repeats after one clean rerun attempt.
+16. Stop on missing input, denied required permission, unrecoverable blocker, nonrecoverable worker-prompt contamination, or user interruption.
 
 ## Context Contamination Adjudication
 

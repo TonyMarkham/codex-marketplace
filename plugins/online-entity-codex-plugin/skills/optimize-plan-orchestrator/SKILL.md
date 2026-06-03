@@ -19,14 +19,15 @@ If the paths or mode are ambiguous, ask one direct question before starting.
 
 ## Subagent Policy
 
-Prefer one fresh `optimize-plan` custom agent or subagent per pass when the user explicitly authorizes subagents, parallel agents, or fresh-context agents. Fresh means blind independent review of the current plan file, not merely a new process.
+Explicit invocation of `$optimize-plan-orchestrator` authorizes the workflow's required fresh `optimize-plan` custom agents or subagents unless the current user turn asks for no subagents, fallback, single-agent mode, or otherwise restricts delegation.
 
-If subagents are not explicitly authorized:
+Do not ask an extra authorization question merely because the prompt omitted wording such as "with subagents authorized."
 
-1. Ask whether to use fresh subagents, or
-2. Run a clearly labeled single-agent fallback only if the user requested no subagents or accepts the fallback.
+Fresh means blind independent review of the current plan file, not merely a new process.
 
-Do not hide the fallback. It is lower isolation than the opencode command harness and must not be reported as blind independent convergence.
+Ask before launching subagents only when the user's wording conflicts with the default fresh-subagent workflow, delegation availability is unclear, or the runtime cannot launch the required fresh agents.
+
+If the user requests or accepts fallback, do not hide it. Single-agent fallback is lower isolation than the opencode command harness and must not be reported as blind independent convergence.
 
 ## Independence Boundary
 

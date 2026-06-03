@@ -101,7 +101,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.25.2
+0.25.3
 ```
 
 ## Skills
@@ -113,16 +113,16 @@ Stabilize a Markdown implementation plan by running repeated `$optimize-plan` pa
 This is the Codex mapping of the opencode `/optimize-plan-orchestrator` command. Codex does not need a repo-local slash command for this workflow; invoke the skill directly:
 
 ```text
-Use $optimize-plan-orchestrator on <plan-file> with subagents authorized.
+Use $optimize-plan-orchestrator on <plan-file>.
 ```
 
 Output-plan mode:
 
 ```text
-Use $optimize-plan-orchestrator on <input-plan.md> and write the result to <output-plan.md> with subagents authorized.
+Use $optimize-plan-orchestrator on <input-plan.md> and write the result to <output-plan.md>.
 ```
 
-The orchestrator does not edit the plan directly. It launches one fresh blind `$optimize-plan` pass at a time when subagents are authorized. Fresh means the worker sees only static workflow instructions and the current plan path/mode, not prior pass summaries, findings, changes, clean streak, flip-flop state, or suppression instructions. Without explicit subagent authorization, it asks before using fresh agents or labels a single-agent fallback. Single-agent fallback is not reported as blind independent convergence.
+The orchestrator does not edit the plan directly. Invoking `$optimize-plan-orchestrator` authorizes its required fresh blind `$optimize-plan` subagents unless the prompt asks for no subagents, fallback, or single-agent mode. Fresh means the worker sees only static workflow instructions and the current plan path/mode, not prior pass summaries, findings, changes, clean streak, flip-flop state, or suppression instructions. Single-agent fallback is used only when requested or accepted and is not reported as blind independent convergence.
 
 Stop conditions:
 
