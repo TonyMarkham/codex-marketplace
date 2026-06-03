@@ -1,6 +1,6 @@
 {
   "name": "online-entity-codex-plugin",
-  "version": "0.25.0",
+  "version": "0.25.2",
   "description": "Reusable Codex skills for evidence-backed plan audits, single-pass and multi-pass plan optimization, guided manual implementation, architecture review, and plugin-building review.",
   "author": {
     "name": "Tony Markham",

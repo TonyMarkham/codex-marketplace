@@ -101,7 +101,7 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 Current plugin version:
 
 ```text
-0.25.0
+0.25.2
 ```
 
 ## Skills
@@ -122,7 +122,7 @@ Output-plan mode:
 Use $optimize-plan-orchestrator on <input-plan.md> and write the result to <output-plan.md> with subagents authorized.
 ```
 
-The orchestrator does not edit the plan directly. It launches one fresh blind `$optimize-plan` pass at a time when subagents are authorized. Fresh means the worker sees only the current plan path/mode, not prior pass summaries, findings, changes, clean streak, flip-flop state, or suppression instructions. Without explicit subagent authorization, it asks before using fresh agents or labels a single-agent fallback.
+The orchestrator does not edit the plan directly. It launches one fresh blind `$optimize-plan` pass at a time when subagents are authorized. Fresh means the worker sees only static workflow instructions and the current plan path/mode, not prior pass summaries, findings, changes, clean streak, flip-flop state, or suppression instructions. Without explicit subagent authorization, it asks before using fresh agents or labels a single-agent fallback. Single-agent fallback is not reported as blind independent convergence.
 
 Stop conditions:
 
@@ -393,7 +393,6 @@ codex-marketplace/
       guided-implement.toml
       optimize-plan.toml
       optimize-plan-orchestrator.toml
-      plan-review-subagent.toml
     config.toml
     base-instructions.md
   plugins/
@@ -409,7 +408,6 @@ codex-marketplace/
         guided-implementation-teacher.md
         colab-audit-plan.md
         optimize-plan-orchestrator.md
-        plan-review-subagent.md
       skills/
         colab-audit-plan/
           SKILL.md
@@ -434,5 +432,4 @@ codex-marketplace/
     colab-audit-plan.config.toml
     guided-implementation-teacher.config.toml
     optimize-plan-orchestrator.config.toml
-    plan-review-subagent.config.toml
 ```
