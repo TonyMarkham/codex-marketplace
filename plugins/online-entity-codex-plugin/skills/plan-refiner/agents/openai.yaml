@@ -1,0 +1,5 @@
+interface:
+  display_name: "Plan Refiner"
+  short_description: "Implementation plan refinement"
+  brand_color: "#10A37F"
+  default_prompt: "Use $plan-refiner to refine this implementation plan."

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Guided Implement"
+  short_description: "Manual guided implementation"
+  brand_color: "#10A37F"
+  default_prompt: "Use $guided-implement on this approved plan."

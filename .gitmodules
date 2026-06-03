@@ -1,0 +1,3 @@
+[submodule "submodules/opencode-plugin-harness"]
+	path = submodules/opencode-plugin-harness
+	url = https://github.com/TonyMarkham/opencode-plugin-harness.git

@@ -1,0 +1,4 @@
+# Template for ~/.codex/optimize-plan-orchestrator.config.toml.
+# If copied outside this repository, replace model_instructions_file with an absolute installed plugin path.
+model_instructions_file = "../plugins/online-entity-codex-plugin/base-instructions/optimize-plan-orchestrator.md"
+model_reasoning_effort = "high"

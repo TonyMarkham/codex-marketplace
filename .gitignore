@@ -1,6 +1,3 @@
-# Local Codex project config and runtime state
-.codex/
-
 # OS/editor noise
 .DS_Store
 Thumbs.db

@@ -1,6 +1,6 @@
 # codex-marketplace
 
-A personal Codex CLI plugin marketplace for reusable skills, workflows, and profile instruction files.
+A personal Codex plugin marketplace for reusable skills, workflow agents, and base-instruction profiles.
 
 This repository is the Codex counterpart to `TonyMarkham/cc-marketplace`. It uses the Codex marketplace catalog path:
 
@@ -77,6 +77,7 @@ To verify that key skills are installed, check for:
 Linux/WSL:
 
 ```bash
+test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/optimize-plan-orchestrator/SKILL.md
 test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/optimize-plan/SKILL.md
 test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/colab-audit-plan/SKILL.md
 test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-codex-plugin/<version>/skills/guided-implement/SKILL.md
@@ -85,6 +86,7 @@ test -f ~/.codex/plugins/cache/online-entity-codex-marketplace/online-entity-cod
 Windows PowerShell:
 
 ```powershell
+Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\optimize-plan-orchestrator\SKILL.md"
 Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\optimize-plan\SKILL.md"
 Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\colab-audit-plan\SKILL.md"
 Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace\online-entity-codex-plugin\<version>\skills\guided-implement\SKILL.md"
@@ -94,105 +96,69 @@ Test-Path "$env:USERPROFILE\.codex\plugins\cache\online-entity-codex-marketplace
 
 | Name | Description |
 | --- | --- |
-| `online-entity-codex-plugin` | Codex skills for iterative plan optimization, guided implementation, architecture review, and plugin-building review. |
+| `online-entity-codex-plugin` | Codex skills for plan audits, single-pass and multi-pass plan optimization, guided implementation, architecture review, and plugin-building review. |
 
 Current plugin version:
 
 ```text
-0.24.0
+0.25.0
 ```
 
 ## Skills
 
+### `optimize-plan-orchestrator`
+
+Stabilize a Markdown implementation plan by running repeated `$optimize-plan` passes until the plan reaches three consecutive clean passes, a flip-flop is detected, a blocker appears, or the 20-pass safety limit is hit.
+
+This is the Codex mapping of the opencode `/optimize-plan-orchestrator` command. Codex does not need a repo-local slash command for this workflow; invoke the skill directly:
+
+```text
+Use $optimize-plan-orchestrator on <plan-file> with subagents authorized.
+```
+
+Output-plan mode:
+
+```text
+Use $optimize-plan-orchestrator on <input-plan.md> and write the result to <output-plan.md> with subagents authorized.
+```
+
+The orchestrator does not edit the plan directly. It launches one fresh `$optimize-plan` pass at a time when subagents are authorized. Without explicit subagent authorization, it asks before using fresh agents or labels a single-agent fallback.
+
+Stop conditions:
+
+- three consecutive passes with `ZERO_CHANGES_REQUIRED: yes`
+- flip-flop between passes
+- unrecoverable blocker or denied required permission
+- 20 total passes
+
 ### `optimize-plan`
 
-Optimize a plan document through iterative Codex review/edit passes until stable.
+Run one evidence-backed audit-and-edit pass on a Markdown implementation plan. This is the Codex mapping of the opencode `/optimize-plan` command.
 
-File loop mode reviews a file and applies only gated material fixes in place:
-
-```text
-Use $optimize-plan on <file> with subagents authorized.
-```
-
-Plan mode reads from an input file and writes a complete refined plan to an output file:
+In-place mode:
 
 ```text
-Use $optimize-plan on <input_file> and write the result to <output_file> with subagents authorized.
+Use $optimize-plan on <plan-file> for one evidence-backed pass.
 ```
 
-Optional GPT/Codex preferences can be included in plain language:
+Output-plan mode:
 
 ```text
-Use $optimize-plan on <file> with subagents authorized, gpt-5.5, and high reasoning.
+Use $optimize-plan on <input-plan.md> and write the refined plan to <output-plan.md>.
 ```
 
-Recommended efficient model split:
+The pass must:
 
-```text
-Use $optimize-plan on <file> with subagents authorized. Use the current model as orchestrator and use gpt-5.4-mini high for reviewer subagents.
-```
+- read the plan before editing
+- audit concrete claims against repo evidence
+- use an independent `audit-plan` custom agent when subagents are authorized, otherwise label the audit as single-agent fallback
+- edit only the named plan/output Markdown file
+- avoid source, test, config, or unrelated documentation edits
+- change only verified material implementation issues, such as wrong paths/APIs, stale assumptions, dependency-order defects, unsupported runtime assumptions, duplicate greenfield implementation, or missing required steps
+- avoid style-only rewrites and optional hardening
+- return `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, `CHAIN_SUMMARY` as visible workflow summary only, `CHANGES_MADE`, and `REMAINING_CONCERNS`
 
-High-risk review with a stronger first reviewer:
-
-```text
-Use $optimize-plan on <file> with subagents authorized. Use gpt-5.5 medium as orchestrator, gpt-5.5 high for the first reviewer, and gpt-5.4-mini high for later reviewer subagents.
-```
-
-Cheaper smoke review:
-
-```text
-Use $optimize-plan on <file> with subagents authorized. Use gpt-5.4-mini medium for orchestrator and reviewer subagents.
-```
-
-This is the Codex-supported port of the Claude Code `/optimize-plan` workflow. Codex CLI slash commands are currently built-in commands; this marketplace exposes the workflow as a skill instead.
-
-The fresh-context loop requires explicit subagent authorization in current Codex runtimes. If the prompt does not authorize subagents, the skill may run in single-agent fallback mode and should label that fallback in its final report.
-
-#### Optimize-plan behavior
-
-The orchestrator controls the loop. Reviewer subagents perform individual review passes.
-
-Reviewers receive neutral workflow context: target path, mode, baseline state, prior reviewer outcomes, and permission patterns. They should not be told their ordinal pass number or whether they are early or late in the loop.
-
-Each reviewer pass must:
-
-- read the plan before judging it
-- verify concrete claims against the repository, docs, APIs, and runtime behavior when needed
-- identify the existing repo surface for each major planned behavior before accepting the plan's implementation shape
-- classify planned work as modifying, extending, replacing, or newly adding implementation
-- treat duplicate greenfield implementations of existing behavior as blocking unless replacement is justified with repo evidence
-- check that the plan follows repo-local patterns for modules, APIs, data flow, errors, tests, and ownership
-- classify proposed edits before editing as `BLOCKING`, `MATERIAL`, `MINOR`, or `OPTIONAL`
-- apply only `BLOCKING` and `MATERIAL` changes
-- apply `MINOR` changes only when directly adjacent to an applied material fix
-- skip `OPTIONAL` changes
-- report skipped minor/optional proposals under `SKIPPED_CHANGES`
-- report runtime approval prompts under `PERMISSIONS_REQUESTED`
-
-Before the first reviewer, the orchestrator records the target file baseline: path, existence, VCS status when available, and a diff stat or fingerprint. The final report compares the final target state to that baseline, so a modified file is reported as one of:
-
-- changed during optimization
-- already modified before optimization
-- reporting mismatch, if the file changed but all reviewers reported `CHANGES_MADE: none`
-
-The orchestrator must forward each raw reviewer report unchanged before summarizing or adjudicating it, then close that completed reviewer before starting the next one. After forwarding the raw report, the orchestrator separately classifies the pass as:
-
-```text
-BLOCKING | MATERIAL | MINOR_ONLY | CLEAN | FLIP_FLOP
-```
-
-Only orchestrator-classified `CLEAN` passes count toward convergence. `CLEAN` means the reviewer found no material issue and made no file edits; `MINOR_NOTES` and `SKIPPED_CHANGES` may still be present. `MINOR_ONLY` does not count as a no-change pass.
-
-Convergence rules:
-
-- Stop after three consecutive `CLEAN` orchestrator classifications.
-- Stop immediately on `FLIP_FLOP`.
-- Stop at the safety limit of 20 reviewer passes.
-- `BLOCKING`, `MATERIAL`, and `MINOR_ONLY` reset the no-change streak.
-
-Permission handling is advisory, not a bypass. If a reviewer reports an approved reusable command pattern, the orchestrator passes that pattern to later reviewers so they can keep command shapes stable, but Codex may still ask for runtime approval.
-
-If a runtime clearly supports a same-thread two-phase reviewer pass, the orchestrator may ask for proposed changes first, adjudicate those proposals, then send the same reviewer back to apply approved material fixes. Otherwise, the reviewer-side pre-edit gate is the supported default.
+Use `$optimize-plan-orchestrator` when the requested behavior is repeated passes until stable.
 
 ### `plan-refiner`
 
@@ -200,7 +166,7 @@ Review and refine implementation plans by checking evidence, assumptions, sequen
 
 ### `guided-implement`
 
-Guide a human through implementing an approved plan one small manual coding step at a time. Codex acts as a teacher and reviewer, but does not edit files.
+Guide a human through implementing an approved plan one small manual step at a time. Codex acts as a teacher and reviewer, but does not edit files or run mutating commands.
 
 Use it after a plan has been reviewed or optimized:
 
@@ -216,22 +182,14 @@ Use $guided-implement on <plan-file>. Verify my last edit, then give me the next
 Use $guided-implement on <plan-file>. Focus on the parser section first.
 ```
 
-The skill must:
+The skill preserves the plan's implementation method:
 
-- read the plan before selecting the next step
-- read every existing target file before proposing edits to it
-- present exactly one implementation step at a time
-- avoid summarizing future steps after presenting the current step
-- avoid writing, patching, formatting, or deleting files
-- never infer edit permission from a plan, prior approval, or surrounding context
-- avoid authority performance, lecturing, scolding, and defensive replies
-- include the target path relative to the repo root
-- prefer `Find` / `Replace` instructions for existing files
-- use exact `Insert After`, `Insert This`, and `Insert Before` landmarks for insertions
-- stop after each step and wait for the user
-- stop immediately if the user says no, wait, stop, or challenges whether Codex should proceed
-
-This is intentionally separate from `optimize-plan`: `optimize-plan` hardens the plan, while `guided-implement` teaches the user through applying the already-approved plan manually.
+- if the next approved step is a CLI step, it gives exact commands for the user to run manually
+- if the next approved step is a file edit, it gives exact manual edit instructions
+- it does not convert CLI steps into direct file edits, or direct file edits into CLI steps, unless the plan or repo instructions require it
+- it reads existing target files before proposing edits
+- it presents exactly one command, edit, verification, or blocked step at a time
+- it stops after the step and waits for the user
 
 ### `colab-audit-plan`
 
@@ -247,7 +205,7 @@ Patch only explicitly approved findings:
 Use $colab-audit-plan to patch findings A1 and B2 only, then stop.
 ```
 
-The skill is intentionally separate from `optimize-plan`. `optimize-plan` is an iterative review/edit loop. `colab-audit-plan` is a permission-gated audit checkpoint for proving whether a plan matches existing repo behavior and patterns before any patching happens.
+The skill is intentionally separate from `$optimize-plan`. `$colab-audit-plan` is a permission-gated audit checkpoint; `$optimize-plan` is a single audit-and-edit pass; `$optimize-plan-orchestrator` is the repeated stabilization loop.
 
 The audit reports:
 
@@ -260,61 +218,29 @@ The audit reports:
 - actual plan defects
 - unverifiable assumptions
 
-By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings. It must not over-infer intent, prioritize task completion over permission boundaries, rationalize unapproved edits as helpful, or claim repo evidence without inspecting the relevant repo surface in the current session.
+By default it must not edit files, compress the plan, replace implementation detail with prose, or patch unapproved findings.
 
-The audit is accuracy-first, not speed-first. Speed is not a success criterion, latency is not a metric to optimize, and a fast unverified answer is a failure. The skill must inspect before answering when verification is needed, record residual uncertainty instead of pretending unverified claims are clean, and avoid reporting a clean audit unless the requested scope has been checked against repo evidence, type/file inventory, implementability, compatibility, and repo patterns.
+## Codex Agents And Command Mapping
 
-Before making any correctness, compatibility, repo-pattern, implementation-readiness, acceptance-criteria, or reviewer-handoff claim, the skill must inspect the relevant plan section, inspect the relevant repo files/tests/commands/schemas/outputs, cite the exact evidence used, and state what was not checked. If that verification is incomplete, it must withhold the conclusion:
+The opencode harness has first-class command and agent files. The Codex mapping in this repo is:
 
-```text
-VERIFICATION COMPLETE:
-- no
+| Opencode surface | Codex surface in this repo |
+| --- | --- |
+| `commands/optimize-plan-orchestrator.md` | `$optimize-plan-orchestrator` skill |
+| `commands/optimize-plan.md` | `$optimize-plan` skill |
+| `commands/audit-plan.md` | `$colab-audit-plan` skill and local `audit-plan` custom agent |
+| `commands/guided-implement.md` | `$guided-implement` skill and local `guided-implement` custom agent |
+| `agents/*.md` | `.codex/agents/*.toml` for local development, plus plugin `base-instructions/` for session profiles |
 
-MISSING VERIFICATION:
-- <specific plan sections, repo files, tests, commands, schemas, or outputs not checked>
+Current Codex custom prompts are local to `~/.codex/prompts/` and deprecated in favor of skills, so this marketplace exposes command-like workflows as skills instead of adding repo-local slash commands.
 
-CONCLUSION:
-- withheld
-
-NEXT ACTION:
-- verify before concluding
-```
-
-If the user points out a specific defect and asks for a fix, the skill treats that as approval for that exact correction only. It must not broaden the request into a new audit, rewrite, cleanup, refactor, or alternate workflow.
-
-If the model disagrees with the requested fix, it must disagree in conversation before editing:
-
-1. Stop before editing.
-2. State the concrete conflict.
-3. Give repo evidence if relevant.
-4. Ask how to proceed.
-5. Do not edit until the user approves the revised direction.
-
-After any approved patch, the skill must inspect the diff and report a patch self-audit covering approved scope, repo-rule checks, type/file inventory validity, implementation-detail preservation, unsupported APIs, and unapproved behavior changes.
-
-Readiness and confidence claims are mechanically gated. After patching known findings, the skill must not say the plan is ready, clean, satisfactory, reviewer-ready, repo-aligned, safe to pass on, or has no issues until it performs a post-patch/readiness verification pass. Patching the known findings is not the same thing as proving the whole plan is ready.
-
-Readiness answers use this shape:
+Project-local custom agents live under:
 
 ```text
-SATISFIED:
-- yes | no
-
-BASIS:
-- <only completed verification evidence>
-
-NOT VERIFIED:
-- <anything not checked, or "none">
-
-NEXT ACTION:
-- ready for reviewer | audit more | patch approved issues
+.codex/agents/
 ```
 
-For a one-off audit inside a normal Codex session, invoke the skill directly:
-
-```text
-Use $colab-audit-plan on <plan-file>. Do not edit.
-```
+They are useful when working in this checkout after the project `.codex/` layer is trusted. They are not claimed as plugin-distributed until Codex documents plugin packaging for custom agents.
 
 ## Base Instruction Startup
 
@@ -428,7 +354,17 @@ These startup snippets are the current required startup procedure for whole-sess
 
 Do not use `~` in quoted `-c` values. Shells do not expand it consistently inside quoted strings.
 
-The `optimize-plan` skill still includes its review contract inline because current Codex runtimes may not support assigning a separate profile or `model_instructions_file` to each spawned subagent.
+The optimize-plan skills keep their pass contracts inline. Role-specific base instructions are also shipped for sessions or custom agents that can apply them explicitly.
+
+## Profile Templates
+
+`profiles/*.config.toml` use the current Codex profile-file shape: top-level config keys, not legacy `[profiles.<name>]` tables. They are templates for user-level Codex profiles such as:
+
+```text
+~/.codex/strict-auditor.config.toml
+```
+
+If you copy one outside this repository, replace `model_instructions_file` with an absolute path to the installed plugin cache or to this checkout. Installed plugin paths are versioned, so the startup snippets above are safer for ad hoc use.
 
 ## Hooks
 
@@ -436,7 +372,8 @@ The `optimize-plan` skill still includes its review contract inline because curr
 
 ## Current Limits
 
-- Codex CLI slash commands are built-in commands. This marketplace does not expose `/optimize-plan`; use `Use $optimize-plan ...`.
+- Repo-distributed command workflows are exposed as skills, not custom prompts. Codex custom prompts are local to `~/.codex/prompts/` and deprecated in favor of skills.
+- Project-local custom agents in `.codex/agents/` are for this checkout after the project is trusted. The installed plugin ships skills and base instruction files; do not assume custom agents are plugin-distributed unless current Codex docs/runtime support is verified.
 - The Codex desktop app may not share WSL2 plugin state. For Windows desktop testing, install and verify the marketplace from Windows PowerShell so the plugin lands under the Windows Codex home.
 - Base instruction files are shipped with the plugin, but Codex uses them for a session only when started with `-c model_instructions_file=...` or another explicit Codex configuration mechanism.
 
@@ -449,6 +386,16 @@ codex-marketplace/
   .agents/
     plugins/
       marketplace.json
+  .codex/
+    agents/
+      audit-plan.toml
+      collaborator.toml
+      guided-implement.toml
+      optimize-plan.toml
+      optimize-plan-orchestrator.toml
+      plan-review-subagent.toml
+    config.toml
+    base-instructions.md
   plugins/
     online-entity-codex-plugin/
       .codex-plugin/
@@ -470,6 +417,8 @@ codex-marketplace/
           SKILL.md
         optimize-plan/
           SKILL.md
+        optimize-plan-orchestrator/
+          SKILL.md
         plan-refiner/
           SKILL.md
           scripts/
@@ -479,11 +428,11 @@ codex-marketplace/
         hooks.json
       assets/
   profiles/
-    strict-auditor.toml
-    architect.toml
-    plugin-builder.toml
-    colab-audit-plan.toml
-    guided-implementation-teacher.toml
-    optimize-plan-orchestrator.toml
-    plan-review-subagent.toml
+    strict-auditor.config.toml
+    architect.config.toml
+    plugin-builder.config.toml
+    colab-audit-plan.config.toml
+    guided-implementation-teacher.config.toml
+    optimize-plan-orchestrator.config.toml
+    plan-review-subagent.config.toml
 ```

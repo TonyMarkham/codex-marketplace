@@ -1,0 +1,4 @@
+# Template for ~/.codex/colab-audit-plan.config.toml.
+# If copied outside this repository, replace model_instructions_file with an absolute installed plugin path.
+model_instructions_file = "../plugins/online-entity-codex-plugin/base-instructions/colab-audit-plan.md"
+model_reasoning_effort = "high"

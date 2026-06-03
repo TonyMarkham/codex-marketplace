@@ -1,3 +1,0 @@
-[profiles.architect]
-model_instructions_file = "../plugins/online-entity-codex-plugin/base-instructions/architect.md"
-model_reasoning_effort = "high"

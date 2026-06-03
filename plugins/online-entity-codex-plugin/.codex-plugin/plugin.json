@@ -1,7 +1,7 @@
 {
   "name": "online-entity-codex-plugin",
-  "version": "0.24.0",
-  "description": "Reusable Codex skills for iterative plan optimization, collaborative plan audits, guided implementation, architecture review, and plugin-building review.",
+  "version": "0.25.0",
+  "description": "Reusable Codex skills for evidence-backed plan audits, single-pass and multi-pass plan optimization, guided manual implementation, architecture review, and plugin-building review.",
   "author": {
     "name": "Tony Markham",
     "url": "https://github.com/TonyMarkham"
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Online Entity Codex",
-    "shortDescription": "Plan optimization, audit, and guided implementation skills.",
-    "longDescription": "Reusable Codex skills for optimizing plans, auditing implementation plans against repo evidence, teaching manual plan implementation, tightening architecture decisions, and building Codex plugin marketplace packages.",
+    "shortDescription": "Plan audit, optimization, and guided implementation skills.",
+    "longDescription": "Reusable Codex skills for auditing implementation plans against repo evidence, optimizing plans in single-pass or multi-pass modes, teaching manual plan implementation, tightening architecture decisions, and building Codex plugin marketplace packages.",
     "developerName": "Tony Markham",
     "category": "Productivity",
     "capabilities": [
@@ -29,11 +29,11 @@
     ],
     "websiteURL": "https://github.com/TonyMarkham/codex-marketplace",
     "defaultPrompt": [
-      "Use $optimize-plan on this implementation plan.",
+      "Use $optimize-plan-orchestrator on this implementation plan with subagents authorized.",
+      "Use $optimize-plan on this implementation plan for one evidence-backed pass.",
       "Use $colab-audit-plan on this implementation plan. Do not edit.",
       "Use $guided-implement on this approved plan.",
-      "Tighten this plugin marketplace design.",
-      "Audit this plan for gaps and assumptions."
+      "Use $plan-refiner to tighten this plugin marketplace design."
     ],
     "brandColor": "#10A37F",
     "screenshots": []

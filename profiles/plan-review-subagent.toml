@@ -1,3 +1,0 @@
-[profiles.plan-review-subagent]
-model_instructions_file = "../plugins/online-entity-codex-plugin/base-instructions/plan-review-subagent.md"
-model_reasoning_effort = "high"

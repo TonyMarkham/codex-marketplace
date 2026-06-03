@@ -1,0 +1,5 @@
+interface:
+  display_name: "Optimize Plan"
+  short_description: "Single-pass plan optimization"
+  brand_color: "#10A37F"
+  default_prompt: "Use $optimize-plan on this implementation plan for one evidence-backed pass."
