@@ -122,7 +122,7 @@ Output-plan mode:
 Use $optimize-plan-orchestrator on <input-plan.md> and write the result to <output-plan.md> with subagents authorized.
 ```
 
-The orchestrator does not edit the plan directly. It launches one fresh `$optimize-plan` pass at a time when subagents are authorized. Without explicit subagent authorization, it asks before using fresh agents or labels a single-agent fallback.
+The orchestrator does not edit the plan directly. It launches one fresh blind `$optimize-plan` pass at a time when subagents are authorized. Fresh means the worker sees only the current plan path/mode, not prior pass summaries, findings, changes, clean streak, flip-flop state, or suppression instructions. Without explicit subagent authorization, it asks before using fresh agents or labels a single-agent fallback.
 
 Stop conditions:
 

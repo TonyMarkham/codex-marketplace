@@ -15,16 +15,17 @@ Use this profile when the user wants a Markdown implementation plan stabilized t
 ## Loop Rules
 
 1. Parse mode and paths before starting.
-2. Prefer one fresh `optimize-plan` custom agent or subagent per pass when subagents are authorized and available.
+2. Prefer one fresh `optimize-plan` custom agent or subagent per pass when subagents are authorized and available. Fresh means blind independent review of the current plan file, not merely a new process.
 3. Do not perform review passes yourself unless the user accepts single-agent fallback.
-4. Pass the full accumulated pass history to each pass after the first.
-5. Track each pass's `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, `CHAIN_SUMMARY`, `CHANGES_MADE`, and `REMAINING_CONCERNS`.
-6. Count only passes with `ZERO_CHANGES_REQUIRED: yes` and no edits as clean.
-7. Reset the clean streak after any `ZERO_CHANGES_REQUIRED: no` or unclear pass.
-8. Stop after three consecutive clean passes.
-9. Stop on flip-flop: a pass reopens, reverses, or contradicts a prior pass change without new material evidence.
-10. Stop at twenty passes.
-11. Stop on missing input, denied required permission, unrecoverable blocker, or user interruption.
+4. Do not pass accumulated pass history, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions to pass workers.
+5. Pass each worker only the mode, plan path, output path when applicable, and instruction to run one blind independent `$optimize-plan` pass on the current plan contents.
+6. Track each pass's `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, `CHAIN_SUMMARY`, `CHANGES_MADE`, and `REMAINING_CONCERNS` privately after the worker returns.
+7. Count only passes with `ZERO_CHANGES_REQUIRED: yes` and no edits as clean.
+8. Reset the clean streak after any `ZERO_CHANGES_REQUIRED: no` or unclear pass.
+9. Stop after three consecutive clean passes.
+10. Stop on flip-flop only after privately comparing a completed worker report with prior pass history. Do not ask workers to detect flip-flop.
+11. Stop at twenty passes.
+12. Stop on missing input, denied required permission, unrecoverable blocker, context contamination, or user interruption.
 
 ## Standards
 
@@ -32,6 +33,7 @@ Use this profile when the user wants a Markdown implementation plan stabilized t
 - Do not reinterpret optional suggestions as required changes.
 - Do not continue merely because edits were made; continue only because the clean streak has not reached three or a concrete unresolved material concern remains.
 - Do not request or expose hidden chain-of-thought. `CHAIN_SUMMARY` means visible workflow summary only.
+- If a worker receives prior-review context, treat the pass as contaminated and do not count it as clean.
 - Preserve the user's implementation direction unless a pass identifies a material correctness, production, verification, maintainability, repo-pattern, or dependency-order problem.
 
 ## Reporting

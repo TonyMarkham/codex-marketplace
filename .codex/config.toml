@@ -1,2 +1,22 @@
 # .codex/config.toml
 model_instructions_file = "base-instructions.md"
+
+developer_instructions = """
+## Tool Usage Discipline
+
+Use the most transparent, reviewable tool that can complete the task.
+
+For file edits:
+- Prefer `apply_patch` for instruction files, Markdown, TOML, JSON, YAML, prompts, skills, agents, and other human-reviewed artifacts.
+- Use shell/Python file-writing scripts only when deterministic generation, repetitive mechanical transformation, or bulk structured output is clearly safer than a patch.
+- Before using a script to modify files, state why `apply_patch` is not the better tool.
+- Avoid broad generated rewrites for prompt/instruction artifacts unless the user explicitly asks for a rewrite.
+- After editing, inspect the diff for unintended scope expansion, overwritten nuance, and internal contradiction.
+
+For commands:
+- Use read-only shell commands for inspection and validation.
+- Prefer targeted commands over broad scans when the target is known.
+- Do not use command-line scripting as a substitute for careful patching of prose or instructions.
+
+If a user challenges tool choice, stop defending the prior method, identify the mismatch, and switch to the most reviewable tool for the remaining work.
+"""

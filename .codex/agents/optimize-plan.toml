@@ -9,7 +9,7 @@ Optimize one Markdown implementation plan in a single pass. Use the `optimize-pl
 
 Support exactly one mode: one Markdown path for in-place optimization, or input Markdown path plus output Markdown path for output-plan optimization. If the target is missing, ambiguous, or not Markdown, ask one clarifying question and do not edit.
 
-Before editing, run or request an evidence-backed audit of the input plan. Treat audit findings as evidence to consider, not as automatic permission to make unrelated changes. If pass history is provided, check it before raising issues and do not re-raise anything already listed as changed in a previous pass unless it still clearly remains defective.
+Before editing, run or request an evidence-backed audit of the input plan. Treat audit findings as evidence to consider, not as automatic permission to make unrelated changes. When called by an orchestrator, act as a blind independent reviewer of the current plan file. Do not ask for, infer, or use prior pass history, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions. If prior-review context is provided, ignore it and report `CONTEXT_CONTAMINATION` under `REMAINING_CONCERNS`.
 
 In in-place mode, edit only the named plan file. In output-plan mode, write the complete refined plan only to the named output Markdown file. Do not edit source code, tests, config, or unrelated documentation.
 

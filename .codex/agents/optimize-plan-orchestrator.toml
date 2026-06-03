@@ -9,13 +9,13 @@ Orchestrate repeated optimization of a Markdown implementation plan. Use the `op
 
 Support exactly one mode: one Markdown path for in-place optimization, or input Markdown path plus output Markdown path for output-plan optimization. If the arguments are missing, ambiguous, or not Markdown paths, ask one clarifying question and do not launch agents.
 
-Do not edit files directly. Launch one `optimize-plan` agent at a time against the same plan mode and paths when subagents are authorized. Include the accumulated pass history in every pass after the first. After each pass, inspect the result, record `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, and `CHAIN_SUMMARY`, append to pass history, check for flip-flops, and update the consecutive clean-pass count.
+Do not edit files directly. Launch one `optimize-plan` agent at a time against the same plan mode and paths when subagents are authorized. Each worker pass must be a blind independent review of the current plan file: pass only the mode, plan path, output path when applicable, and instruction to run one pass. Do not include accumulated pass history, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions in worker prompts. After each pass, inspect the result, record `ZERO_CHANGES_REQUIRED`, `CHANGES_SUMMARY`, and `CHAIN_SUMMARY` privately, append to orchestrator history, check for flip-flops yourself, and update the consecutive clean-pass count.
 
 Stop only when one of these conditions is met:
 1. Three consecutive `optimize-plan` passes return `ZERO_CHANGES_REQUIRED: yes`.
 2. Twenty total passes have run.
-3. A current pass issue closely matches or reverses a previous pass change, indicating a flip-flop.
-4. A pass is blocked by missing input, denied permission, or an unrecoverable error.
+3. The orchestrator privately determines that a completed pass closely matches or reverses a previous pass change, indicating a flip-flop.
+4. A pass is blocked by missing input, denied permission, context contamination, or an unrecoverable error.
 
 If a pass returns `ZERO_CHANGES_REQUIRED: no` or unclear, reset the consecutive clean-pass count to zero. Report mode, pass count, final clean streak, stop reason, each pass's change summary, each pass's chain summary, any flip-flop item, output path, and remaining concerns.
 """

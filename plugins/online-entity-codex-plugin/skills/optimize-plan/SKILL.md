@@ -23,7 +23,7 @@ If the target is missing, ambiguous, or not a Markdown plan, ask one direct ques
 2. Audit the plan against repository evidence before editing.
 3. When subagents are explicitly authorized, launch an independent `audit-plan` custom agent or subagent first. Otherwise, perform the audit yourself and label `AUDIT_USED` as `single-agent-fallback`.
 4. Consider audit findings against verified repository evidence; do not treat speculative findings as required changes.
-5. If pass history is provided, review it before raising issues and do not re-raise anything already listed in previous `CHANGES_SUMMARY` or `CHANGES_MADE` unless it still clearly remains defective.
+5. When invoked by `$optimize-plan-orchestrator`, act as a blind independent reviewer of the current plan file. Do not ask for, infer, or use prior pass summaries, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions. If prior-review context is provided, ignore it and report `CONTEXT_CONTAMINATION` under `REMAINING_CONCERNS`.
 6. In in-place mode, edit only the named plan file.
 7. In output-plan mode, write the complete refined plan only to the named output Markdown file.
 8. Do not edit source code, tests, config, or unrelated documentation.
