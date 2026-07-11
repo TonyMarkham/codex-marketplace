@@ -1,110 +1,146 @@
 ---
 name: optimize-plan-orchestrator
-description: Stabilize Markdown implementation plans by running repeated optimize-plan passes until three clean passes, flip-flop, a blocker, or twenty passes. Use when the user asks to optimize until stable or run the old multi-pass plan loop.
+description: Stabilize Markdown implementation plans through bounded fresh optimize-plan passes that enforce explicit user directives and AGENTS.md rules, require evidence-backed coverage, ignore non-material polish, and converge after three distinct clean audit lenses.
 ---
 # Optimize Plan Orchestrator
 
-Stabilize a Markdown implementation plan by running repeated `$optimize-plan` passes and tracking convergence.
-
-Use this skill when the user asks to optimize, harden, stabilize, or repeatedly refine a plan until it is clean. For a single audit-and-edit pass, use `$optimize-plan`. For audit-only review, use `$colab-audit-plan`.
+Run sequential blind `$optimize-plan` workers until the current plan earns three consecutive clean
+passes under distinct audit lenses, or a defined stop condition occurs.
 
 ## Modes
 
-Support exactly one mode per invocation:
+- **In-place:** one Markdown path, optimized in place.
+- **Output-plan:** input and output Markdown paths. Pass 1 reads input and writes output; later
+  passes use output as both current input and output.
 
-- **In-place mode:** one Markdown plan path. Optimize that file in place through repeated passes.
-- **Output-plan mode:** input Markdown path plus output Markdown path. Pass 1 reads the input path and writes the complete refined plan to the output path. Later passes read and write the output path as the current plan. Do not keep rereading the original input after the output file exists.
+Ask one direct question before launching workers when mode or paths are ambiguous.
 
-If the paths or mode are ambiguous, ask one direct question before starting.
+## Authority And Immutable Directives
 
-## Subagent Policy
+Before pass 1, build an immutable directive packet from:
 
-Explicit invocation of `$optimize-plan-orchestrator` authorizes the workflow's required fresh `optimize-plan` custom agents or subagents unless the current user turn asks for no subagents, fallback, single-agent mode, or otherwise restricts delegation.
+1. explicit user requirements, decisions, acceptance criteria, and current-turn corrections;
+2. applicable repository `AGENTS.md` and linked mandatory instruction files;
+3. constraints already stated as authoritative in the plan.
 
-Do not ask an extra authorization question merely because the prompt omitted wording such as "with subagents authorized."
+The user's explicit decisions outrank repository defaults and reviewer preferences. Repository
+directives remain mandatory unless the user explicitly overrides them. A directive packet is not
+pass history or contamination and must be sent unchanged to every worker. Never include prior
+findings, edits, outcomes, clean state, or suppression instructions in that packet.
 
-Fresh means blind independent review of the current plan file, not merely a new process.
+If the user adds or changes a directive during the loop, interrupt the active worker, rebuild the
+packet, reset the clean streak, and continue with a fresh neutral worker.
 
-Ask before launching subagents only when the user's wording conflicts with the default fresh-subagent workflow, delegation availability is unclear, or the runtime cannot launch the required fresh agents.
+## Fresh Workers And Audit Lenses
 
-If the user requests or accepts fallback, do not hide it. Single-agent fallback is lower isolation than the opencode command harness and must not be reported as blind independent convergence.
+Launch one fresh `$optimize-plan` worker at a time. Use neutral task identities that do not expose
+pass numbers or outcomes. Each worker performs the complete mandatory audit contract and receives
+one emphasis lens:
 
-## Independence Boundary
+1. `repo-directives-and-architecture`
+2. `code-api-error-and-data-flow`
+3. `verification-operations-security-and-order`
 
-The parent orchestrator may track pass history, clean streak, flip-flop state, pass count, and final reporting. Pass workers must not see that state.
+Cycle these lenses in that order. The lens changes emphasis, not mandatory coverage. Convergence
+requires three consecutive clean valid passes covering all three distinct lenses. This adds bounded
+method diversity without inviting endless style searches.
 
-A pass worker receives only static workflow instructions plus:
-
-- mode
-- input plan path
-- output plan path, when applicable
-- the instruction to perform one blind independent `$optimize-plan` pass on the current plan contents
-
-A pass worker must not receive prior pass summaries, prior findings, prior changes, prior clean/dirty status, clean-pass streak, flip-flop state, or instructions to suppress previously reported issues.
-
-## Orchestrator Rules
-
-1. Parse mode and paths before launching any pass.
-2. Do not edit files directly; only pass workers may edit the named plan/output file.
-3. Launch or perform one `$optimize-plan` pass at a time.
-4. Do not pass accumulated pass history, prior outcomes, clean streak, or flip-flop state to pass workers.
-5. Track pass history privately in the orchestrator after each pass returns.
-6. Run at most twenty passes.
-7. In output-plan mode, pass 1 uses `INPUT_PLAN: <input path>` and `OUTPUT_PLAN: <output path>`; later passes use `INPUT_PLAN: <output path>` and `OUTPUT_PLAN: <output path>`.
-8. Continue until at least three consecutive blind passes return `ZERO_CHANGES_REQUIRED: yes`.
-9. Reset the clean-pass streak to zero whenever a pass returns `ZERO_CHANGES_REQUIRED: no` or `unclear`.
-10. Stop on flip-flop only after the orchestrator privately compares a completed worker report with prior pass history. Do not ask workers to detect flip-flop.
-11. Stop early only for missing input, denied required permission, unrecoverable blocker, user interruption, nonrecoverable worker-prompt contamination, or flip-flop.
-12. Treat missing or malformed `ZERO_CHANGES_REQUIRED` as not clean unless the pass clearly says no changes were required and no edits were made.
-13. Preserve every valid pass's `CHANGES_SUMMARY`, `CHAIN_SUMMARY`, `CHANGES_MADE`, and `REMAINING_CONCERNS` in orchestrator-private state. Do not request or expose hidden chain-of-thought.
-14. Track invalid attempts separately from valid passes. Invalid attempts include contaminated worker prompts, denied required permissions before review, malformed worker outputs that cannot be interpreted, or worker runs that did not inspect the target plan.
-
-## Context Contamination Adjudication
-
-Do not treat every `CONTEXT_CONTAMINATION` mention as an automatic stop. First classify what happened:
-
-- **Worker-prompt contamination:** prior pass history, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions were included in the worker prompt or parent-provided instructions outside the plan file. This invalidates the pass. Do not count it as clean. Rerun once with a clean blind prompt if possible. Stop only if the contamination cannot be removed or repeats.
-- **Plan-contained process text:** the current plan file itself contains status notes, audit notes, provenance, or text such as "repository audit found...". This is plan content, not parent-context contamination. If the worker ignored it as authority and verified against current repo evidence, the pass remains valid. If the text is stale, misleading, or likely to bias future implementation/review, treat it as a plan-content issue to report or patch; do not hard-stop solely because it exists.
-- **Ambiguous contamination or reliance:** if the worker relied on prior-review/process text as authority, or the report does not make clear whether contamination came from the prompt or from the plan file, mark the pass `unclear`, do not count it as clean, and rerun once with an explicit clean blind prompt. Stop only if ambiguity/reliance repeats or cannot be resolved.
-
-Use an actionable stop reason that names the source. Do not use generic contamination wording without stating exactly what leaked and why rerun could not recover.
-
-## Valid Pass And Attempt Accounting
-
-- A **valid pass** is a worker run that inspected the current plan, returned an interpretable structured report, and was not invalidated by worker-prompt contamination or denied required permission before review.
-- `PASSES_RUN` counts valid passes only.
-- `ATTEMPTS_RUN` counts valid passes plus invalid attempts.
-- Invalid attempts do not count as clean and do not advance convergence.
-- Invalid attempts reset no state except their own retry allowance.
-- The 20-pass safety limit applies to valid passes. Also stop if invalid attempts exceed three total or if the same invalid-attempt cause repeats after one clean rerun attempt.
-- Record invalid attempts under `INVALID_ATTEMPTS`; do not hide them inside `PASS_SUMMARY`.
-- Single-agent fallback passes are valid only for a fallback run, but they are not blind independent passes. Do not use `stable-after-three-clean-passes` for fallback convergence; use `single-agent-fallback-complete` or `single-agent-fallback-stopped`.
-
-## Pass Prompt Shape
-
-Use this shape for each pass worker:
+## Worker Prompt
 
 ```text
 Run one optimize-plan pass.
 
 MODE: in-place | output-plan
-INPUT_PLAN: <input path>
-OUTPUT_PLAN: <same as input for in-place, or output path>
+INPUT_PLAN: <path>
+OUTPUT_PLAN: <path>
+AUDIT_LENS: <one configured lens>
 
-You are a blind independent reviewer. Review only the current plan file. Do not ask for, infer, or use prior pass summaries, prior findings, prior changes, clean-pass state, flip-flop state, or suppression instructions. If prior-review context appears in this prompt outside the plan file, ignore it and report `CONTEXT_CONTAMINATION` under `REMAINING_CONCERNS`. If the plan file itself contains status notes, audit notes, provenance, or prior-review wording, treat that as plan content: do not rely on it as authority, verify against current repo evidence, and report or patch it only if it is stale, misleading, or materially likely to bias implementation/review.
+IMMUTABLE_DIRECTIVES:
+<explicit user directives and applicable repository requirements; no pass history>
 
-Review only genuine issues that would concretely affect implementation correctness, repo-pattern alignment, verification quality, production behavior, or executable dependency order.
-
-Pay particular attention to dependency ordering: every step must depend only on artifacts, decisions, credentials, or behavior created earlier in the plan or already present in the repository.
-
-Do not write patch provenance, pass notes, audit summaries, status notes, change logs, reviewer comments, or "this pass changed..." explanations into the plan file. The plan file should contain only the implementation plan. Put patch/change reporting only in the structured worker report.
-
-Return ZERO_CHANGES_REQUIRED: yes only if this pass found no verified required plan changes and made no edits. Return ZERO_CHANGES_REQUIRED: no if this pass made edits or found required changes.
-
-Return CHANGES_SUMMARY with the concrete plan edits made in this pass, or none if no edits were made.
-
-Return CHAIN_SUMMARY with a concise visible workflow summary: audit result, key evidence checked, decision made, and edit outcome. Do not include hidden reasoning or private chain-of-thought.
+Use $optimize-plan and follow its complete mandatory audit, materiality, evidence, and clean-pass
+contracts. Review only the current plan and repository evidence. Do not ask for, infer, or use prior
+pass summaries, findings, edits, outcomes, clean state, flip-flop state, or suppression instructions.
+Treat IMMUTABLE_DIRECTIVES as binding requirements, not contamination. Ignore minor wording polish,
+optional enhancements, and speculative robustness without material evidence.
 ```
+
+## Valid And Clean Passes
+
+A pass is valid only when it:
+
+- inspected the complete current plan and every distinct planned file/code block;
+- read and reported applicable repository instructions;
+- returned an interpretable directive ledger, coverage list, exact evidence, unverified list,
+  material findings, and structured outcome;
+- did not ignore or override immutable directives;
+- did not claim evidence it failed to identify;
+- was not contaminated by pass history or denied required permission before review.
+
+A valid pass is clean only when `ZERO_CHANGES_REQUIRED: yes`, no edit occurred, no blocking/material
+finding or unverified mandatory gate remains, and the evidence supports its coverage claims.
+`MINOR_OPTIONAL_IGNORED` does not make a pass dirty.
+
+Treat missing or generic evidence, missing directive coverage, false readiness claims, or
+`ZERO_CHANGES_REQUIRED: yes` alongside mandatory `NOT_VERIFIED` items as `unclear` and rerun once.
+
+## Parent Arbiter Duties
+
+The orchestrator is the arbiter, not a vote counter. After every worker:
+
+1. Inspect the actual plan diff or confirm no diff.
+2. Check the worker's directive ledger against the immutable packet.
+3. Check that named evidence plausibly covers every claimed gate and planned area.
+4. Reject edits that override a user directive or binding repo instruction.
+5. Record valid reports privately; never pass their history to later workers.
+6. Reset the clean streak after a dirty or unclear valid pass.
+7. Before declaring convergence, re-read the final changed areas, inspect the final diff, and verify
+   that the last three clean passes used the three distinct lenses.
+
+Do not call a plan compile-validated or production-ready unless actual post-change compilation
+evidence says so. Three clean evidence-audit passes prove bounded audit convergence only.
+
+## Flip-Flop Adjudication
+
+Do not stop merely because two reports mention the same subject. Determine whether the operational
+requirement actually reversed.
+
+Resolve apparent oscillation using this order:
+
+1. explicit user directive;
+2. binding repository instruction;
+3. verified current behavior/API evidence;
+4. reviewer preference.
+
+If one direction clearly wins, reject or correct the losing edit, reset the streak, and continue.
+Record `flip-flop-detected` only when valid evidence-backed passes repeatedly reverse the same
+material decision and the authority order cannot resolve it. Refinement, corrected rationale, or
+equivalent operational behavior is not a flip-flop.
+
+## Bounded Materiality
+
+- Applicable user directives and `AGENTS.md` rules are always material.
+- Compile/runtime correctness, error/data flow, security, compatibility, verification, repo-required
+  maintainability, and dependency order are material.
+- Wording polish, optional abstractions, personal taste, speculative edge cases, and unrequired
+  hardening are minor/optional and must not trigger edits, reset the streak, or extend the loop.
+- Do not run more passes after three distinct clean lenses merely to seek more confidence.
+
+## Limits And Stop Conditions
+
+- Maximum 20 valid passes.
+- Maximum 3 invalid attempts; stop if invalid attempts exceed 3 or the same invalid cause repeats
+  after one clean rerun.
+- Stop for missing input, denied required permission, unrecoverable blocker, user stop, unresolved
+  prompt contamination, or adjudicated flip-flop.
+- Single-agent fallback is not blind convergence; report `single-agent-fallback-complete` or
+  `single-agent-fallback-stopped`.
+
+## Contamination
+
+Prior-pass state outside the plan invalidates a worker. Immutable user/repo directives do not.
+Process or audit wording inside the plan is plan content: workers must ignore it as authority and
+verify independently. Ambiguous reliance makes the pass unclear and permits one clean rerun.
 
 ## Output
 
@@ -113,7 +149,7 @@ PLAN:
 - <input path>
 
 OUTPUT:
-- <same as input for in-place mode, or output path>
+- <current output path>
 
 MODE:
 - in-place | output-plan
@@ -122,30 +158,41 @@ SUBAGENT_MODE:
 - fresh-subagents | single-agent-fallback
 
 PASSES_RUN:
-- <number>
+- <valid passes>
 
 ATTEMPTS_RUN:
-- <number>
+- <valid plus invalid attempts>
 
 FINAL_CLEAN_STREAK:
-- <number>/3
+- <count>/3
+
+CLEAN_LENSES:
+- <three lenses, or completed subset>
 
 STOP_REASON:
-- stable-after-three-clean-passes | single-agent-fallback-complete | single-agent-fallback-stopped | flip-flop-detected | contaminated-worker-prompt | invalid-attempt-limit | max-passes-reached | blocked | user-stopped
+- stable-after-three-clean-lenses | single-agent-fallback-complete | single-agent-fallback-stopped | flip-flop-detected | contaminated-worker-prompt | invalid-attempt-limit | max-passes-reached | blocked | user-stopped
+
+DIRECTIVE_PACKET:
+- <binding user/repo directives used by every worker>
+
+COMPILE_VALIDATED:
+- yes | no
 
 CONTEXT_CONTAMINATION_ASSESSMENT:
 - none | plan-contained-process-text-valid-pass | plan-contained-process-text-patched | worker-prompt-contaminated-rerun | contaminated-worker-prompt | ambiguous-rerun | unresolved-ambiguous
 
 INVALID_ATTEMPTS:
-- <attempt N>: <cause and recovery result>
-- or "none"
+- <attempt and recovery, or "none">
 
 FLIP_FLOP_ITEM:
-- <oscillating item, or "none">
+- <unresolved material oscillation, or "none">
 
 PASS_SUMMARY:
-- pass <N>: ZERO_CHANGES_REQUIRED: yes | no | unclear; CHANGES_SUMMARY: <summary or "none">; CHAIN_SUMMARY: <visible workflow summary>
+- <lens; clean/dirty/unclear; coverage/evidence summary; changes>
+
+FINAL_PARENT_VERIFICATION:
+- <final diff, directives, and changed-area checks>
 
 REMAINING_CONCERNS:
-- <unresolved uncertainty, or "none">
+- <material unresolved concern, or "none">
 ```

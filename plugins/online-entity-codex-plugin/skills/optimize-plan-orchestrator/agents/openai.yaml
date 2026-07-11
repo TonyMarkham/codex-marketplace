@@ -1,5 +1,5 @@
 interface:
   display_name: "Optimize Plan Orchestrator"
-  short_description: "Multi-pass plan stabilization"
+  short_description: "Bounded multi-lens plan stabilization"
   brand_color: "#10A37F"
-  default_prompt: "Use $optimize-plan-orchestrator on this implementation plan."
+  default_prompt: "Use $optimize-plan-orchestrator to stabilize this plan against my directives and AGENTS.md without chasing minutia."

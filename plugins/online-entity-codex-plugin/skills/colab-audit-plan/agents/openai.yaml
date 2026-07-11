@@ -1,5 +1,5 @@
 interface:
   display_name: "Colab Audit Plan"
-  short_description: "Evidence-first plan audits"
+  short_description: "Directive-safe material plan audits"
   brand_color: "#10A37F"
-  default_prompt: "Use $colab-audit-plan on this implementation plan. Do not edit."
+  default_prompt: "Use $colab-audit-plan to audit this plan against my directives and AGENTS.md without editing or chasing minutia."

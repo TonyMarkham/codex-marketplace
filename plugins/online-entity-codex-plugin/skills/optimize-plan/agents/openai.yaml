@@ -1,5 +1,5 @@
 interface:
   display_name: "Optimize Plan"
-  short_description: "Single-pass plan optimization"
+  short_description: "Directive-safe material plan optimization"
   brand_color: "#10A37F"
-  default_prompt: "Use $optimize-plan on this implementation plan for one evidence-backed pass."
+  default_prompt: "Use $optimize-plan for one evidence-backed pass that enforces my directives and AGENTS.md while ignoring non-material polish."

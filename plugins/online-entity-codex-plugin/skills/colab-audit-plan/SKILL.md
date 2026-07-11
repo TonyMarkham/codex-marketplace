@@ -41,6 +41,42 @@ Use $colab-audit-plan to patch approved findings A1 and B2, then stop.
 - Code blocks in plans are presumed to be real implementation instructions. Do not replace them with prose unless the code is demonstrably wrong and the approved patch requires it.
 - Stop if the user challenges the premise, rejects a finding, or asks you not to proceed.
 
+## Authority And Binding Directives
+
+Apply this order when instructions or evidence conflict:
+
+1. Explicit user requirements, decisions, acceptance criteria, and current-turn corrections.
+2. Applicable `AGENTS.md` and repository instruction files.
+3. Verified current repository behavior and local patterns.
+4. Generic conventions and reviewer preferences.
+
+Build a directive ledger for the requested scope before concluding. Applicable coding style,
+organization, error-handling, documentation, testing, and operational directives in `AGENTS.md` are
+binding material requirements, not minutia. If the user explicitly overrides a repository default,
+preserve the user's decision and report the exception; do not silently restore the default.
+
+## Bounded Materiality
+
+Audit one complete inventory of the requested scope, then stop. Report or patch only:
+
+- `BLOCKING` defects that threaten implementation, compilation, required tests, runtime behavior,
+  data safety, security, or executable dependency order;
+- `MATERIAL` defects that violate binding user/repo directives, bypass established local APIs or
+  error/data patterns, weaken compatibility or required maintainability, omit material verification,
+  or force implementers to invent consequential design.
+
+Ignore wording polish, prose style, optional hardening, alternative architecture, generalized
+abstraction, personal taste, and speculative edge cases without a plausible material consequence.
+Minor/optional observations do not justify edits and do not prevent a clean material audit.
+
+For Rust plan code, explicitly check applicable repository rules for typed result/error
+infrastructure, `thiserror`, `ErrorLocation`, `#[track_caller]`, retained `#[source]` chains, public
+error sanitization, imports, one-primary-type-per-file, public docs, lints, visibility, and tests.
+
+Any clean/readiness output must name the directive ledger, distinct plan areas checked, exact repo
+evidence, material findings, unverified items, and compile-validation status. “Checked repo
+patterns” without those details is not verification.
+
 ## Disagreement Protocol
 
 Disagree in conversation, not through unapproved file edits.

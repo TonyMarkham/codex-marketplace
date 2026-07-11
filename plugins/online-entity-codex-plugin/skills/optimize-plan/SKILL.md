@@ -1,64 +1,175 @@
 ---
 name: optimize-plan
-description: Run one evidence-backed audit-and-edit pass on a Markdown implementation plan. Use when the user asks to optimize, harden, tighten, or make a plan more implementation-ready; use optimize-plan-orchestrator for repeated passes until stable.
+description: Run one evidence-backed audit-and-edit pass on a Markdown implementation plan, enforcing explicit user directives and applicable AGENTS.md rules as mandatory while ignoring non-material polish. Use for single-pass plan hardening or as an optimize-plan-orchestrator worker.
 ---
 # Optimize Plan
 
-Run one audit-and-edit pass on a Markdown implementation plan.
-
-Use `$optimize-plan` for a single pass. If the user asks to loop, stabilize, repeat until clean, or recreate the old multi-pass command workflow, hand off to `$optimize-plan-orchestrator`.
+Audit and, when authorized by the invocation mode, minimally correct one Markdown implementation
+plan. Treat code blocks and file-specific instructions as proposed implementation, not illustrative
+prose.
 
 ## Modes
 
-Support exactly one mode per invocation:
+- **In-place:** read and edit one Markdown plan path.
+- **Output-plan:** read the input path and write the complete refined plan to the output path.
 
-- **In-place mode:** one Markdown plan path. Edit only that plan file.
-- **Output-plan mode:** input Markdown path plus output Markdown path. Write the complete refined plan only to the output path.
+Ask one direct question and do not edit when paths or mode are ambiguous.
 
-If the target is missing, ambiguous, or not a Markdown plan, ask one direct question and do not edit.
+## Authority Order
 
-## Rules
+Apply this order when evidence or preferences conflict:
 
-1. Read the input plan before changing anything.
-2. Audit the plan against repository evidence before editing.
-3. When invoked directly and subagents are explicitly authorized, launch an independent `audit-plan` custom agent or subagent first. When invoked by `$optimize-plan-orchestrator`, do not launch a nested `audit-plan` subagent; the `$optimize-plan` worker itself is the blind independent audit/edit pass. Otherwise, perform the audit yourself and label `AUDIT_USED` as `single-agent-fallback`.
-4. Consider audit findings against verified repository evidence; do not treat speculative findings as required changes.
-5. When invoked by `$optimize-plan-orchestrator`, act as a blind independent reviewer of the current plan file. Do not ask for, infer, or use prior pass summaries, prior findings, prior changes, clean streak, flip-flop state, or suppression instructions. Report `CONTEXT_CONTAMINATION` only when prior-review context appears in the prompt or parent-provided instructions outside the plan file. If the plan file itself contains status notes, audit notes, provenance, or prior-review wording, treat that as plan content: do not rely on it as authority, verify against current repo evidence, and report or patch it only if it is stale, misleading, or materially likely to bias implementation/review.
-6. In in-place mode, edit only the named plan file.
-7. In output-plan mode, write the complete refined plan only to the named output Markdown file.
-8. Do not edit source code, tests, config, or unrelated documentation.
-9. Make the smallest plan changes that resolve verified material issues.
-10. Change only genuine implementation issues: incorrect APIs, wrong file paths, missing required steps, stale assumptions, internal contradictions, unsupported runtime assumptions, dependency-ordering defects, or other issues that would concretely cause implementation failure or incorrect behavior.
-11. Pay particular attention to dependency ordering: every step must depend only on artifacts, decisions, credentials, or behavior created earlier in the plan or already present in the repository.
-12. Preserve concrete implementation detail. Do not replace code blocks or file-specific instructions with broad prose unless the code is demonstrably wrong and the fix requires it.
-13. Do not write patch provenance, pass notes, audit summaries, status notes, change logs, reviewer comments, or "this pass changed..." explanations into the plan file. The plan file should contain only the implementation plan. Put patch/change reporting only in `CHANGES_SUMMARY`, `CHANGES_MADE`, `CHAIN_SUMMARY`, and `REMAINING_CONCERNS`.
-14. If the audit finds no concrete material issue, do not rewrite the plan for style alone.
-15. Return `ZERO_CHANGES_REQUIRED: yes` only if this pass found no verified required plan changes and made no edits.
-16. Return `ZERO_CHANGES_REQUIRED: no` if this pass made edits or found required changes.
-17. Always return `CHANGES_SUMMARY` with the concrete plan edits made, or `none` if no edits were made.
-18. Always return `CHAIN_SUMMARY` as a concise visible workflow summary: audit result, key evidence checked, decision made, and edit outcome. Do not include hidden reasoning or private chain-of-thought.
+1. The user's explicit requirements, decisions, acceptance bar, and current-turn corrections.
+2. Applicable `AGENTS.md` and other repository instruction files for each planned path.
+3. Verified current repository behavior and established local patterns.
+4. Generic ecosystem conventions and reviewer preferences.
 
-## Audit Threshold
+Never override levels 1 or 2 as “best practice,” “safer,” “cleaner,” or minutia. If a higher-level
+directive conflicts with repository state, preserve the directive and report the concrete conflict;
+do not silently substitute the repository default. User directives supplied by an orchestrator are
+requirements, not prior-pass contamination.
 
-Only treat a finding as required when it is evidence-backed and material to implementation. Required changes include:
+## Required Audit Procedure
 
-- wrong file paths, type names, function signatures, commands, or package APIs
-- missing implementation steps needed for later steps to work
-- steps that depend on artifacts created later in the plan
-- duplicate greenfield implementation of existing repo behavior without replacement justification
-- invented helper APIs, abstractions, data models, or error flows that bypass established repo patterns
-- verification steps that cannot exercise the material behavior being introduced
+1. Read the complete plan before concluding.
+2. Read every applicable `AGENTS.md` from repository root through the directories containing
+   planned files. Read any instruction file those directives require for the touched domain.
+3. Build a concise directive ledger containing every applicable MUST, MUST NOT, mandatory
+   convention, explicit user decision, and acceptance criterion. Do not downgrade coding style or
+   organization rules merely because they are stylistic in another repository.
+4. Inventory every planned file, code block, public API, primary type, schema/query, command,
+   operational action, and verification gate. Group truly identical mechanical repetitions, but do
+   not skip a distinct file or code path because the plan is long.
+5. For each inventory item, inspect the nearest current repository analogue and the exact source or
+   authoritative API needed to validate it. Search summaries are discovery evidence, not proof of
+   file contents.
+6. Apply every mandatory gate and each domain gate triggered below.
+7. Patch only verified `BLOCKING` or `MATERIAL` defects. Preserve concrete detail and user direction.
+8. Re-read patched sections, inspect the diff, and re-run the affected gates before reporting.
 
-Do not make edits for wording polish, preferred style, speculative alternatives, or optional hardening.
+Do not launch a nested audit agent when invoked by the orchestrator; the worker is the blind audit
+and edit pass. A directly invoked pass may launch an independent audit agent when explicitly
+authorized.
+
+## Mandatory Gates
+
+A clean result requires all applicable gates:
+
+- **Directive compliance:** every directive-ledger item is satisfied or reported as a blocker.
+- **Repo shape:** planned paths, modules, visibility, naming, ownership, and type/file organization
+  match binding repo rules and verified local patterns.
+- **Implementability:** signatures, imports, dependencies, control flow, data flow, validation,
+  error flow, persistence, public behavior, and tests are concrete enough to implement without
+  inventing missing design.
+- **Dependency order:** every step uses only earlier plan artifacts or verified existing state.
+- **Verification:** planned checks exercise the material behavior and required failure paths.
+- **Security and operations:** public/internal boundaries, secrets, error disclosure, destructive
+  actions, runtime locations, and operator context follow directives and current evidence.
+- **Internal consistency:** summaries, code blocks, tests, deployment steps, rollback, and
+  completion criteria describe the same behavior.
+
+## Triggered Domain Gates
+
+Apply only gates relevant to the plan; irrelevant gates are `not-applicable`, not work to invent.
+
+### Rust
+
+For every planned Rust file or code block, verify applicable repository rules and the nearest local
+analogue, including:
+
+- crate-qualified explicit imports and required grouping/order;
+- one-primary-type-per-file and module wiring;
+- public documentation and visibility;
+- denied lints, handled `Result`s, argument-count rules, and prohibited suppressions;
+- fallible APIs use the repository's typed result/error infrastructure rather than `Option`, boxed
+  generic errors, strings, or ad hoc errors when the local baseline requires typed errors;
+- `thiserror` variants, `ErrorLocation`, `#[track_caller]` constructors, and retained `#[source]`
+  chains wherever those are established repository requirements;
+- public error sanitization does not discard required internal provenance;
+- tests assert typed failures and behavior through the intended visibility boundary.
+
+### Database
+
+Read the repository's database/query conventions before judging SQL, SQLx, migrations, schemas,
+fixtures, or database tests. Verify checked-query choice, migration order, fixtures, metadata, and
+transaction/error behavior.
+
+### Frontend or C#
+
+Verify repository project/solution commands, file splitting, component conventions, visibility,
+and test patterns.
+
+### Infrastructure and Runbooks
+
+Verify execution location, current operator identity, UI paths only when evidenced, security
+boundaries, rollback specificity, and that explicit operator decisions are not overwritten by a
+historical or default runbook.
+
+## Materiality Boundary
+
+Patch or report:
+
+- `BLOCKING`: likely prevents implementation, compilation, required tests, correct runtime
+  behavior, data safety, security, or executable dependency order.
+- `MATERIAL`: violates an explicit user directive or applicable repository instruction; bypasses
+  an established API/error/data pattern; weakens correctness, maintainability required by the
+  repository, compatibility, production behavior, or verification; or forces material invention.
+
+Ignore as non-required:
+
+- wording polish, formatting preference, or prose style with no directive or implementation effect;
+- optional hardening, alternative architecture, generalized abstraction, or “more robust” behavior
+  not required by the user, repo, or concrete risk;
+- speculative edge cases without evidence or a plausible material consequence;
+- personal naming/style preference not established by user or repo instructions.
+
+Applicable `AGENTS.md` rules and explicit user coding directives are always material. Record ignored
+minor/optional observations only as a count or `none`; do not edit them and do not reset convergence
+for them.
+
+Stop searching once the full inventory and all applicable gates have been checked. Do not begin a
+second polish sweep inside the same pass. A pass can be clean even when optional improvements exist.
+
+## Evidence And Readiness
+
+Do not claim a gate was checked without naming the plan section and repository evidence. A worker
+report that says only “checked repo patterns” is insufficient.
+
+Plan auditing is not compile validation. Report `COMPILE_VALIDATED: yes` only when the planned code
+was actually compiled in an authorized validation workflow after the latest relevant plan change.
+Otherwise report `no`; this does not by itself require edits or prevent an evidence-audited clean
+pass, but it forbids claiming compile-validated or production-ready status.
+
+## Editing And Independence
+
+- Edit only the named plan/output file.
+- Do not edit source, tests, configuration, or unrelated documentation.
+- Do not write audit notes, provenance, pass history, or change logs into the plan.
+- When orchestrated, do not request or use prior-pass history, clean streak, flip-flop state, or
+  suppression instructions.
+- Treat process text already inside the plan as plan content, not authority; verify it independently.
+
+## Clean-Pass Contract
+
+Return `ZERO_CHANGES_REQUIRED: yes` only when:
+
+- no verified blocking/material defect remains;
+- no edit was made;
+- every applicable mandatory/domain gate was checked;
+- every binding directive was checked;
+- evidence and unverified items are explicitly reported.
+
+Missing directive coverage, generic evidence claims, ignored binding instructions, or an
+uninspected distinct planned code/file block make the result `unclear`, not clean.
 
 ## Output
 
 ```text
 PLAN:
-- <input path>
+- <path>
 
 OUTPUT:
-- <same as input for in-place mode, or output path>
+- <path>
 
 MODE:
 - in-place | output-plan
@@ -66,11 +177,35 @@ MODE:
 AUDIT_USED:
 - independent-audit-agent | worker-self-audit | single-agent-fallback | no, with reason
 
-ZERO_CHANGES_REQUIRED:
+AUDIT_LENS:
+- comprehensive | repo-directives-and-architecture | code-api-error-and-data-flow | verification-operations-security-and-order
+
+DIRECTIVE_LEDGER:
+- <binding user/repo directive -> plan evidence/status>
+
+COVERAGE:
+- <plan sections/files/code blocks checked, grouped only when mechanically identical>
+
+EVIDENCE:
+- <exact repository files, symbols, commands, or authoritative sources used>
+
+COMPILE_VALIDATED:
 - yes | no
 
+NOT_VERIFIED:
+- <items outside completed verification, or "none">
+
+MATERIAL_FINDINGS:
+- <blocking/material findings, or "none">
+
+MINOR_OPTIONAL_IGNORED:
+- <count and short categories, or "none">
+
+ZERO_CHANGES_REQUIRED:
+- yes | no | unclear
+
 CHANGES_SUMMARY:
-- <summary of concrete plan edits made, or "none">
+- <concrete edits, or "none">
 
 CHAIN_SUMMARY:
 - <concise visible workflow summary; no hidden reasoning>
@@ -79,5 +214,5 @@ CHANGES_MADE:
 - <specific plan changes, or "none">
 
 REMAINING_CONCERNS:
-- <unresolved uncertainty, or "none">
+- <material unresolved concern, or "none">
 ```
